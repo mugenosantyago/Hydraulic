@@ -17,7 +17,8 @@
     "ServerCommonPacketListenerMixin",
     "ConfigurationCompletionMixin",
     "CustomPacketMixin",
-    "EntityJoinEventMixin"
+    "EntityJoinEventMixin",
+    "NetworkRegistryCheckMixin"
   ],
   "injectors": {
     "defaultRequire": 0
