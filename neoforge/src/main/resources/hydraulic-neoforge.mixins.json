@@ -14,7 +14,8 @@
     "ConnectionTransitionMixin",
     "NeoForgeConnectionMixin",
     "GlobalDisconnectMixin",
-    "ServerCommonPacketListenerMixin"
+    "ServerCommonPacketListenerMixin",
+    "ConfigurationCompletionMixin"
   ],
   "injectors": {
     "defaultRequire": 0
