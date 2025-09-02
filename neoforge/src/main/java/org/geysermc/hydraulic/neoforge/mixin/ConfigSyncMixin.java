@@ -1,33 +1,52 @@
 package org.geysermc.hydraulic.neoforge.mixin;
 
-import net.minecraft.server.network.ConfigurationTask;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
-import net.neoforged.neoforge.network.configuration.SyncConfig;
 import org.geysermc.geyser.api.GeyserApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = SyncConfig.class, remap = false)
+@Mixin(ServerConfigurationPacketListenerImpl.class)
 public class ConfigSyncMixin {
+    private static final Logger LOGGER = LoggerFactory.getLogger("ConfigSyncMixin");
+    private boolean isBedrockPlayer = false;
 
     /**
-     * Prevents NeoForge config sync from running for Bedrock players.
-     * This prevents the "you need NeoForge" error message from appearing for Bedrock players.
+     * Detects Bedrock players during configuration initialization.
      */
     @Inject(
-        method = "run",
-        at = @At("HEAD"),
-        cancellable = true,
-        remap = false
+        method = "<init>",
+        at = @At("TAIL")
     )
-    private void preventConfigSyncForBedrock(ServerConfigurationPacketListenerImpl listener, CallbackInfo ci) {
-        // Check if this is a Bedrock player
-        if (GeyserApi.api().isBedrockPlayer(listener.getOwner().getId())) {
-            // Skip config sync for Bedrock players to prevent NeoForge version error
-            // Complete the task immediately without sending any packets
-            listener.finishCurrentTask(SyncConfig.TYPE);
+    private void onConfigurationInit(net.minecraft.server.MinecraftServer server, net.minecraft.network.Connection connection, net.minecraft.server.network.CommonListenerCookie cookie, CallbackInfo ci) {
+        try {
+            this.isBedrockPlayer = GeyserApi.api().isBedrockPlayer(cookie.gameProfile().getId());
+            LOGGER.info("ConfigSyncMixin: Configuration created for player {} (Bedrock: {})", cookie.gameProfile().getName(), this.isBedrockPlayer);
+            
+            if (this.isBedrockPlayer) {
+                LOGGER.info("ConfigSyncMixin: Detected Bedrock player - will bypass NeoForge checks");
+            }
+        } catch (Exception e) {
+            LOGGER.warn("ConfigSyncMixin: Error in configuration init: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Logs when configuration starts and attempts to skip it for Bedrock players.
+     */
+    @Inject(
+        method = "startConfiguration",
+        at = @At("HEAD"),
+        cancellable = true
+    )
+    private void bypassConfigurationForBedrock(CallbackInfo ci) {
+        if (this.isBedrockPlayer) {
+            LOGGER.info("ConfigSyncMixin: Attempting to skip configuration phase for Bedrock player");
+            // Simply cancel the configuration start - this should prevent NeoForge tasks from being added
             ci.cancel();
         }
     }
