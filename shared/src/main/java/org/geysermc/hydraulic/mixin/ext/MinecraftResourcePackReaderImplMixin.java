@@ -37,12 +37,18 @@ public abstract class MinecraftResourcePackReaderImplMixin {
             return GsonUtil.parseReader(reader);
         } catch (com.google.gson.JsonSyntaxException e) {
             if (e.getCause() instanceof com.google.gson.stream.MalformedJsonException) {
-                LOGGER.warn("Skipping malformed JSON file: {}. This is likely due to a corrupted mod resource file.", e.getMessage());
+                LOGGER.warn("Skipping malformed JSON file due to BiomesOPlenty corruption: {}. This is a known issue with the mod.", e.getMessage());
             } else {
                 LOGGER.error("Failed to parse JSON due to syntax error: " + e.getMessage());
             }
+        } catch (RuntimeException e) {
+            if (e.getMessage() != null && (e.getMessage().contains("MalformedJsonException") || e.getMessage().contains("Unterminated object"))) {
+                LOGGER.warn("Skipping JSON file with malformed content: {}. This is likely due to a corrupted mod resource file.", e.getMessage());
+            } else {
+                LOGGER.error("Failed to parse JSON (RuntimeException): " + e.getMessage());
+            }
         } catch (Exception e) {
-            LOGGER.error("Failed to parse JSON: " + e.getMessage());
+            LOGGER.error("Failed to parse JSON (General Exception): " + e.getMessage());
         }
 
         return null;
@@ -67,17 +73,36 @@ public abstract class MinecraftResourcePackReaderImplMixin {
         try {
             return instance.deserializeFromJson(jsonElement, key);
         } catch (IllegalArgumentException e) {
-            // Handle specific cases of known validation issues
+            // Handle our special skip exceptions and other known issues
             if (e.getMessage() != null) {
-                if (e.getMessage().contains("Unknown select property type")) {
+                if (e.getMessage().startsWith("HYDRAULIC_SKIP_")) {
+                    LOGGER.debug("Item model processing skipped due to handled issue (" + key + ")");
+                } else if (e.getMessage().contains("Unknown select property type")) {
                     LOGGER.warn("Skipping item model with unknown select property type (" + key + "): " + e.getMessage());
                 } else if (e.getMessage().contains("Angle must be multiple of 22.5, in range of -45 to 45")) {
                     LOGGER.warn("Skipping model with invalid rotation angle (" + key + "): " + e.getMessage());
+                } else if (e.getMessage().contains("Unknown special render type")) {
+                    LOGGER.warn("Skipping item model with unknown special render type (" + key + "): " + e.getMessage());
                 } else {
                     LOGGER.error("Failed to deserialize JSON (" + key + "): " + e.getMessage());
                 }
             } else {
                 LOGGER.error("Failed to deserialize JSON (" + key + "): " + e.getMessage());
+            }
+        } catch (RuntimeException e) {
+            // Catch all runtime exceptions including nested IllegalArgumentExceptions
+            if (e.getMessage() != null) {
+                if (e.getMessage().contains("Angle must be multiple of 22.5") || 
+                    e.getMessage().contains("Unknown select property type") ||
+                    e.getMessage().contains("Unknown special render type") ||
+                    e.getMessage().contains("MalformedJsonException") ||
+                    e.getMessage().contains("Unterminated object")) {
+                    LOGGER.warn("Skipping problematic model file (" + key + "): " + e.getMessage());
+                } else {
+                    LOGGER.error("Runtime error during model deserialization (" + key + "): " + e.getMessage());
+                }
+            } else {
+                LOGGER.error("Runtime error during model deserialization (" + key + "): " + e.getClass().getSimpleName());
             }
         } catch (Exception e) {
             LOGGER.error("Failed to deserialize JSON (" + key + "): " + e.getMessage());

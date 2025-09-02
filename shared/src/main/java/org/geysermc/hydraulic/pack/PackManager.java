@@ -41,6 +41,7 @@ import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -99,7 +100,15 @@ public class PackManager {
                 mod.id(),
                 mod.roots()
                     .stream()
-                    .map(path -> MinecraftResourcePackReader.minecraft().read(NioDirectoryFileTreeReader.read(path)))
+                    .map(path -> {
+                        try {
+                            return MinecraftResourcePackReader.minecraft().read(NioDirectoryFileTreeReader.read(path));
+                        } catch (Exception e) {
+                            LOGGER.warn("Failed to read resource pack from path {}: {}", path, e.getMessage());
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
                     .toList()
             );
         }
