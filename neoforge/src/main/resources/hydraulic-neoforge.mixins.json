@@ -17,7 +17,8 @@
     "ServerCommonPacketListenerMixin",
     "ConfigurationCompletionMixin",
     "CustomPacketMixin",
-    "GoodNightsSleepMixin"
+    "GoodNightsSleepMixin",
+    "IncompatibleClientMixin"
   ],
   "injectors": {
     "defaultRequire": 0
