@@ -85,62 +85,49 @@ public class ServerCommonPacketListenerMixin {
                                     LOGGER.debug("ServerCommonPacketListenerMixin: Could not clear task queue: {}", taskException.getMessage());
                                 }
                                 
-                                // Now try to finish the configuration using multiple approaches
+                                // Now try to finish the configuration using the correct method
                                 boolean configurationCompleted = false;
                                 
-                                // Method 1: Try finishConfiguration
+                                // Method 1: Try handleConfigurationFinished with null parameter
                                 try {
-                                    java.lang.reflect.Method finishMethod = 
-                                        net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
-                                    finishMethod.setAccessible(true);
-                                    finishMethod.invoke(configListener);
-                                    LOGGER.info("ServerCommonPacketListenerMixin: Successfully completed configuration via finishConfiguration for Bedrock player: {}", playerName);
+                                    java.lang.reflect.Method handleFinishedMethod = 
+                                        net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("handleConfigurationFinished", 
+                                            net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket.class);
+                                    handleFinishedMethod.setAccessible(true);
+                                    
+                                    // Try with null parameter (might work for completion)
+                                    handleFinishedMethod.invoke(configListener, (Object) null);
+                                    LOGGER.info("ServerCommonPacketListenerMixin: Successfully completed configuration via handleConfigurationFinished for Bedrock player: {}", playerName);
                                     configurationCompleted = true;
                                 } catch (Exception methodException) {
-                                    LOGGER.info("ServerCommonPacketListenerMixin: finishConfiguration failed: {}", methodException.getMessage());
+                                    LOGGER.info("ServerCommonPacketListenerMixin: handleConfigurationFinished failed: {}", methodException.getMessage());
                                 }
                                 
-                                // Method 2: Try switchToPlayPhase if finishConfiguration failed
+                                // Method 2: Try returnToWorld if available
                                 if (!configurationCompleted) {
                                     try {
-                                        java.lang.reflect.Method switchToPlayMethod = 
-                                            net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("switchToPlayPhase");
-                                        switchToPlayMethod.setAccessible(true);
-                                        switchToPlayMethod.invoke(configListener);
-                                        LOGGER.info("ServerCommonPacketListenerMixin: Successfully switched to play phase for Bedrock player: {}", playerName);
+                                        java.lang.reflect.Method returnToWorldMethod = 
+                                            net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("returnToWorld");
+                                        returnToWorldMethod.setAccessible(true);
+                                        returnToWorldMethod.invoke(configListener);
+                                        LOGGER.info("ServerCommonPacketListenerMixin: Successfully returned to world for Bedrock player: {}", playerName);
                                         configurationCompleted = true;
-                                    } catch (Exception switchException) {
-                                        LOGGER.info("ServerCommonPacketListenerMixin: switchToPlayPhase failed: {}", switchException.getMessage());
+                                    } catch (Exception returnException) {
+                                        LOGGER.info("ServerCommonPacketListenerMixin: returnToWorld failed: {}", returnException.getMessage());
                                     }
                                 }
                                 
-                                // Method 3: Try to find and call any method that might complete configuration
+                                // Method 3: Try startNextTask to continue the flow
                                 if (!configurationCompleted) {
                                     try {
-                                        java.lang.reflect.Method[] methods = net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethods();
-                                        LOGGER.info("ServerCommonPacketListenerMixin: Available methods for configuration completion:");
-                                        for (java.lang.reflect.Method method : methods) {
-                                            String methodName = method.getName();
-                                            LOGGER.info("  - {}", methodName);
-                                            
-                                            // Try methods that sound like they complete configuration
-                                            if (methodName.contains("finish") || methodName.contains("complete") || 
-                                                methodName.contains("transition") || methodName.contains("switch")) {
-                                                try {
-                                                    if (method.getParameterCount() == 0) {
-                                                        method.setAccessible(true);
-                                                        method.invoke(configListener);
-                                                        LOGGER.info("ServerCommonPacketListenerMixin: Successfully called {} for Bedrock player: {}", methodName, playerName);
-                                                        configurationCompleted = true;
-                                                        break;
-                                                    }
-                                                } catch (Exception methodCallException) {
-                                                    LOGGER.debug("ServerCommonPacketListenerMixin: Method {} failed: {}", methodName, methodCallException.getMessage());
-                                                }
-                                            }
-                                        }
-                                    } catch (Exception reflectionException) {
-                                        LOGGER.debug("ServerCommonPacketListenerMixin: Could not enumerate methods: {}", reflectionException.getMessage());
+                                        java.lang.reflect.Method startNextTaskMethod = 
+                                            net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("startNextTask");
+                                        startNextTaskMethod.setAccessible(true);
+                                        startNextTaskMethod.invoke(configListener);
+                                        LOGGER.info("ServerCommonPacketListenerMixin: Successfully called startNextTask for Bedrock player: {}", playerName);
+                                        configurationCompleted = true;
+                                    } catch (Exception startTaskException) {
+                                        LOGGER.info("ServerCommonPacketListenerMixin: startNextTask failed: {}", startTaskException.getMessage());
                                     }
                                 }
                                 
