@@ -10,7 +10,8 @@
     "NetworkRegistrationMixin",
     "NeoForgeVersionCheckMixin",
     "NeoForgeNetworkingMixin",
-    "ConnectionTransitionMixin"
+    "ConnectionTransitionMixin",
+    "NeoForgeConnectionMixin"
   ],
   "injectors": {
     "defaultRequire": 0

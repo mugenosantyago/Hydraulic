@@ -2,6 +2,7 @@ package org.geysermc.hydraulic.neoforge.mixin;
 
 import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
 import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.hydraulic.neoforge.util.BedrockDetectionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,12 +30,7 @@ public class ConnectionTransitionMixin {
             ServerConfigurationPacketListenerImpl self = (ServerConfigurationPacketListenerImpl) (Object) this;
             
             if (self.getOwner() != null) {
-                boolean isBedrockPlayer = false;
-                try {
-                    isBedrockPlayer = GeyserApi.api() != null && GeyserApi.api().isBedrockPlayer(self.getOwner().getId());
-                } catch (Exception geyserException) {
-                    return;
-                }
+                boolean isBedrockPlayer = BedrockDetectionHelper.isBedrockPlayer(self);
                 
                 if (isBedrockPlayer) {
                     LOGGER.info("ConnectionTransitionMixin: Finishing configuration for Bedrock player: {}", 
@@ -58,12 +54,7 @@ public class ConnectionTransitionMixin {
             ServerConfigurationPacketListenerImpl self = (ServerConfigurationPacketListenerImpl) (Object) this;
             
             if (self.getOwner() != null) {
-                boolean isBedrockPlayer = false;
-                try {
-                    isBedrockPlayer = GeyserApi.api() != null && GeyserApi.api().isBedrockPlayer(self.getOwner().getId());
-                } catch (Exception geyserException) {
-                    return;
-                }
+                boolean isBedrockPlayer = BedrockDetectionHelper.isBedrockPlayer(self);
                 
                 if (isBedrockPlayer) {
                     LOGGER.info("ConnectionTransitionMixin: Configuration started for Bedrock player: {}", 

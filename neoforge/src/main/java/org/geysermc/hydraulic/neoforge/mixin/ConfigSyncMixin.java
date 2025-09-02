@@ -29,8 +29,26 @@ public class ConfigSyncMixin {
     )
     private void onConfigurationInit(net.minecraft.server.MinecraftServer server, net.minecraft.network.Connection connection, net.minecraft.server.network.CommonListenerCookie cookie, CallbackInfo ci) {
         try {
-            this.isBedrockPlayer = GeyserApi.api().isBedrockPlayer(cookie.gameProfile().getId());
-            LOGGER.info("ConfigSyncMixin: Configuration created for player {} (Bedrock: {})", cookie.gameProfile().getName(), this.isBedrockPlayer);
+            // Try multiple ways to detect Bedrock players
+            boolean isBedrockFromGeyser = false;
+            boolean isBedrockFromFloodgate = false;
+            
+            try {
+                isBedrockFromGeyser = GeyserApi.api().isBedrockPlayer(cookie.gameProfile().getId());
+            } catch (Exception geyserException) {
+                LOGGER.debug("ConfigSyncMixin: Geyser check failed: {}", geyserException.getMessage());
+            }
+            
+            // Check if this is a Floodgate player (Bedrock players via Geyser/Floodgate start with a dot)
+            String playerName = cookie.gameProfile().getName();
+            if (playerName != null && playerName.startsWith(".")) {
+                isBedrockFromFloodgate = true;
+            }
+            
+            this.isBedrockPlayer = isBedrockFromGeyser || isBedrockFromFloodgate;
+            
+            LOGGER.info("ConfigSyncMixin: Configuration created for player {} (Bedrock: {} - Geyser: {}, Floodgate: {})", 
+                playerName, this.isBedrockPlayer, isBedrockFromGeyser, isBedrockFromFloodgate);
             
             if (this.isBedrockPlayer) {
                 LOGGER.info("ConfigSyncMixin: Detected Bedrock player - will bypass NeoForge checks");
