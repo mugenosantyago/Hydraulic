@@ -4,6 +4,7 @@
   "package": "org.geysermc.hydraulic.neoforge.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "DiagnosticMixin",
     "ConfigSyncMixin",
     "NeoForgeRegistryMixin",
     "NeoForgeHandshakeMixin",
@@ -12,8 +13,7 @@
     "NeoForgeNetworkingMixin",
     "ConnectionTransitionMixin",
     "NeoForgeConnectionMixin",
-    "GlobalDisconnectMixin",
-    "UniversalDisconnectMixin"
+    "GlobalDisconnectMixin"
   ],
   "injectors": {
     "defaultRequire": 0
