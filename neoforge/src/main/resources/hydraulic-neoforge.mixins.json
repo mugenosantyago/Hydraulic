@@ -17,9 +17,7 @@
     "ServerCommonPacketListenerMixin",
     "ConfigurationCompletionMixin",
     "CustomPacketMixin",
-    "EntityJoinEventMixin",
-    "GoodNightsSleepMixin",
-    "WormholeMixin"
+    "GoodNightsSleepMixin"
   ],
   "injectors": {
     "defaultRequire": 0
