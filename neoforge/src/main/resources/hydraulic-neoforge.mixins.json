@@ -13,7 +13,8 @@
     "NeoForgeNetworkingMixin",
     "ConnectionTransitionMixin",
     "NeoForgeConnectionMixin",
-    "GlobalDisconnectMixin"
+    "GlobalDisconnectMixin",
+    "ServerCommonPacketListenerMixin"
   ],
   "injectors": {
     "defaultRequire": 0
