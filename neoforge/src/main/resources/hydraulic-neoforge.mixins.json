@@ -4,6 +4,10 @@
   "package": "org.geysermc.hydraulic.neoforge.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ConfigSyncMixin",
+    "NeoForgeRegistryMixin",
+    "NeoForgeHandshakeMixin",
+    "NetworkRegistrationMixin"
   ],
   "injectors": {
     "defaultRequire": 0

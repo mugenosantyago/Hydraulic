@@ -14,47 +14,77 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * This mixin prevents NeoForge from disconnecting Bedrock players due to missing client-side mods.
  * It only affects Bedrock players - Java players are completely unaffected.
  */
-@Mixin(targets = "net.neoforged.neoforge.network.configuration.SyncConfig", remap = false)
+@Mixin(value = ServerConfigurationPacketListenerImpl.class)
 public class NeoForgeRegistryMixin {
     private static final Logger LOGGER = LoggerFactory.getLogger("NeoForgeRegistryMixin");
 
     /**
-     * Intercepts the SyncConfig.run method to bypass mod synchronization for Bedrock players only.
+     * Intercepts task execution to bypass NeoForge mod synchronization for Bedrock players.
      * This prevents the "Please install NeoForge" disconnect message for Bedrock clients.
      */
     @Inject(
-        method = "run",
+        method = "startNextTask",
         at = @At("HEAD"),
-        cancellable = true,
-        remap = false,
-        require = 0  // Make this injection optional to avoid issues if the target changes
+        cancellable = true
     )
-    private void preventSyncConfigForBedrock(ServerConfigurationPacketListenerImpl listener, CallbackInfo ci) {
+    private void bypassNeoForgeTasksForBedrock(CallbackInfo ci) {
         try {
-            // Safely check if this is a Bedrock player
-            if (listener != null && listener.getOwner() != null) {
-                // Use a defensive approach - only bypass if we're certain it's a Bedrock player
+            ServerConfigurationPacketListenerImpl self = (ServerConfigurationPacketListenerImpl) (Object) this;
+            
+            if (self.getOwner() != null) {
                 boolean isBedrockPlayer = false;
                 try {
-                    isBedrockPlayer = GeyserApi.api() != null && GeyserApi.api().isBedrockPlayer(listener.getOwner().getId());
+                    isBedrockPlayer = GeyserApi.api() != null && GeyserApi.api().isBedrockPlayer(self.getOwner().getId());
                 } catch (Exception geyserException) {
                     // If Geyser check fails, assume it's a Java player and continue normally
-                    LOGGER.debug("NeoForgeRegistryMixin: Could not check if player is Bedrock, assuming Java player");
                     return;
                 }
                 
                 if (isBedrockPlayer) {
-                    LOGGER.info("NeoForgeRegistryMixin: Bypassing NeoForge config sync for Bedrock player: {}", listener.getOwner().getName());
-                    // Complete the task without running the sync
-                    listener.finishCurrentTask(net.neoforged.neoforge.network.configuration.SyncConfig.TYPE);
-                    ci.cancel();
+                    // Get the current task type and check if it's a NeoForge task
+                    try {
+                        // Use reflection to access the current task queue
+                        java.lang.reflect.Field tasksField = ServerConfigurationPacketListenerImpl.class.getDeclaredField("configurationTasks");
+                        tasksField.setAccessible(true);
+                        @SuppressWarnings("unchecked")
+                        java.util.Queue<net.minecraft.server.network.ConfigurationTask> tasks = 
+                            (java.util.Queue<net.minecraft.server.network.ConfigurationTask>) tasksField.get(self);
+                        
+                        if (!tasks.isEmpty()) {
+                            net.minecraft.server.network.ConfigurationTask nextTask = tasks.peek();
+                            String taskClassName = nextTask.getClass().getName();
+                            
+                            // Skip NeoForge configuration tasks
+                            if (taskClassName.contains("neoforge") || taskClassName.contains("SyncConfig")) {
+                                LOGGER.info("NeoForgeRegistryMixin: Skipping NeoForge task {} for Bedrock player: {}", 
+                                    taskClassName, self.getOwner().getName());
+                                
+                                // Remove the task from the queue
+                                tasks.poll();
+                                
+                                // Use reflection to call the private startNextTask method
+                                try {
+                                    java.lang.reflect.Method startNextTaskMethod = 
+                                        ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("startNextTask");
+                                    startNextTaskMethod.setAccessible(true);
+                                    startNextTaskMethod.invoke(self);
+                                } catch (Exception methodException) {
+                                    LOGGER.debug("Could not call startNextTask via reflection: {}", methodException.getMessage());
+                                }
+                                
+                                ci.cancel();
+                                return;
+                            }
+                        }
+                    } catch (Exception reflectionException) {
+                        LOGGER.debug("NeoForgeRegistryMixin: Could not access task queue via reflection: {}", 
+                            reflectionException.getMessage());
+                    }
                 }
-                // For Java players, we do nothing and let the normal flow continue
             }
         } catch (Exception e) {
             // If there's any error, just let the normal flow continue for safety
-            LOGGER.debug("NeoForgeRegistryMixin: Exception in mixin, allowing normal config sync: {}", e.getMessage());
-            // Explicitly do NOT cancel - let normal flow continue
+            LOGGER.debug("NeoForgeRegistryMixin: Exception in mixin, allowing normal task flow: {}", e.getMessage());
         }
     }
 }
