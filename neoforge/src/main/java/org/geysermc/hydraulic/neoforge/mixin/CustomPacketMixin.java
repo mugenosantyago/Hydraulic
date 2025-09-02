@@ -22,44 +22,43 @@ public class CustomPacketMixin {
      * Prevents custom packets from being sent to Bedrock players.
      */
     @Inject(
-        method = "send(Lnet/minecraft/network/protocol/common/custom/CustomPacketPayload;)V",
+        method = "send(Lnet/minecraft/network/protocol/Packet;)V",
         at = @At("HEAD"),
         cancellable = true
     )
-    private void preventCustomPacketsForBedrock(CustomPacketPayload payload, CallbackInfo ci) {
+    private void preventCustomPacketsForBedrock(net.minecraft.network.protocol.Packet<?> packet, CallbackInfo ci) {
         try {
             ServerCommonPacketListenerImpl self = (ServerCommonPacketListenerImpl) (Object) this;
             
-            if (self instanceof net.minecraft.server.network.ServerConfigurationPacketListenerImpl configListener) {
-                boolean isBedrockPlayer = BedrockDetectionHelper.isBedrockPlayer(configListener);
+            if (packet != null) {
+                String packetType = packet.getClass().getName();
                 
-                if (isBedrockPlayer && payload != null) {
-                    String payloadType = payload.type().toString();
+                // Check if this is a custom packet (not vanilla Minecraft)
+                if (packetType.contains("good_nights_sleep") || packetType.contains("custom") || 
+                    (!packetType.startsWith("net.minecraft.network.protocol.game") && 
+                     !packetType.startsWith("net.minecraft.network.protocol.common") &&
+                     !packetType.startsWith("net.minecraft.network.protocol.configuration"))) {
                     
-                    // Skip custom mod packets for Bedrock players
-                    if (!payloadType.startsWith("minecraft:")) {
-                        LOGGER.info("CustomPacketMixin: Preventing custom packet {} from being sent to Bedrock player: {}", 
-                            payloadType, configListener.getOwner().getName());
-                        ci.cancel();
-                        return;
+                    boolean isBedrockPlayer = false;
+                    String playerName = null;
+                    
+                    if (self instanceof net.minecraft.server.network.ServerConfigurationPacketListenerImpl configListener) {
+                        isBedrockPlayer = BedrockDetectionHelper.isBedrockPlayer(configListener);
+                        if (configListener.getOwner() != null) {
+                            playerName = configListener.getOwner().getName();
+                        }
+                    } else if (self instanceof net.minecraft.server.network.ServerGamePacketListenerImpl gameListener) {
+                        if (gameListener.player != null) {
+                            playerName = gameListener.player.getGameProfile().getName();
+                            isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);
+                        }
                     }
-                }
-            } else if (self instanceof net.minecraft.server.network.ServerGamePacketListenerImpl gameListener) {
-                // Also check for game phase
-                if (gameListener.player != null && payload != null) {
-                    String playerName = gameListener.player.getGameProfile().getName();
-                    boolean isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);
                     
                     if (isBedrockPlayer) {
-                        String payloadType = payload.type().toString();
-                        
-                        // Skip custom mod packets for Bedrock players
-                        if (!payloadType.startsWith("minecraft:")) {
-                            LOGGER.info("CustomPacketMixin: Preventing custom packet {} from being sent to Bedrock player: {}", 
-                                payloadType, playerName);
-                            ci.cancel();
-                            return;
-                        }
+                        LOGGER.info("CustomPacketMixin: Preventing custom packet {} from being sent to Bedrock player: {}", 
+                            packetType, playerName);
+                        ci.cancel();
+                        return;
                     }
                 }
             }
