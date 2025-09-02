@@ -49,9 +49,7 @@ public class ConfigSyncMixin {
     )
     private void logConfigurationStart(CallbackInfo ci) {
         if (this.isBedrockPlayer) {
-            LOGGER.info("ConfigSyncMixin: Configuration starting for Bedrock player - will monitor tasks");
+            LOGGER.info("ConfigSyncMixin: Configuration starting for Bedrock player - NeoForge compatibility handled by Geyser");
         }
     }
-
-
 }
