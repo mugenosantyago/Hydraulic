@@ -41,15 +41,15 @@ public class ConfigSyncMixin {
     }
 
     /**
-     * Intercepts configuration start and sets up task filtering for Bedrock players.
+     * Logs when configuration starts for Bedrock players.
      */
     @Inject(
         method = "startConfiguration",
         at = @At("HEAD")
     )
-    private void setupBedrockConfiguration(CallbackInfo ci) {
+    private void logConfigurationStart(CallbackInfo ci) {
         if (this.isBedrockPlayer) {
-            LOGGER.info("ConfigSyncMixin: Configuration starting for Bedrock player - will filter NeoForge tasks");
+            LOGGER.info("ConfigSyncMixin: Configuration starting for Bedrock player - will monitor tasks");
         }
     }
 
