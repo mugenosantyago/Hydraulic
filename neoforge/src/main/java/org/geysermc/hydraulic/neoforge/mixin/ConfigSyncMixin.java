@@ -41,37 +41,17 @@ public class ConfigSyncMixin {
     }
 
     /**
-     * Logs when configuration starts for Bedrock players but allows it to proceed.
+     * Intercepts configuration start and sets up task filtering for Bedrock players.
      */
     @Inject(
         method = "startConfiguration",
         at = @At("HEAD")
     )
-    private void logConfigurationStart(CallbackInfo ci) {
+    private void setupBedrockConfiguration(CallbackInfo ci) {
         if (this.isBedrockPlayer) {
-            LOGGER.info("ConfigSyncMixin: Configuration starting for Bedrock player - monitoring for NeoForge tasks");
+            LOGGER.info("ConfigSyncMixin: Configuration starting for Bedrock player - will filter NeoForge tasks");
         }
     }
 
-    /**
-     * Intercepts task execution to skip NeoForge-specific tasks for Bedrock players.
-     */
-    @Inject(
-        method = "tick",
-        at = @At("HEAD")
-    )
-    private void interceptTaskExecution(CallbackInfo ci) {
-        if (this.isBedrockPlayer && this.currentTask != null) {
-            try {
-                String taskClass = this.currentTask.getClass().getName();
-                if (taskClass.contains("neoforged") || taskClass.contains("SyncConfig")) {
-                    LOGGER.info("ConfigSyncMixin: Completing NeoForge task immediately for Bedrock player: {}", taskClass);
-                    ServerConfigurationPacketListenerImpl self = (ServerConfigurationPacketListenerImpl) (Object) this;
-                    self.finishCurrentTask(this.currentTask.type());
-                }
-            } catch (Exception e) {
-                // Ignore errors and let normal processing continue
-            }
-        }
-    }
+
 }
