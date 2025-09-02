@@ -63,7 +63,29 @@ public class ServerCommonPacketListenerMixin {
                             if (self instanceof net.minecraft.server.network.ServerConfigurationPacketListenerImpl configListener) {
                                 LOGGER.info("ServerCommonPacketListenerMixin: Attempting to complete configuration for Bedrock player: {}", playerName);
                                 
-                                // Use reflection to call finishConfiguration if possible
+                                // First, clear any remaining tasks from the queue
+                                try {
+                                    java.lang.reflect.Field tasksField = net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredField("configurationTasks");
+                                    tasksField.setAccessible(true);
+                                    @SuppressWarnings("unchecked")
+                                    java.util.Queue<net.minecraft.server.network.ConfigurationTask> tasks = 
+                                        (java.util.Queue<net.minecraft.server.network.ConfigurationTask>) tasksField.get(configListener);
+                                    
+                                    int removedTasks = 0;
+                                    while (!tasks.isEmpty()) {
+                                        net.minecraft.server.network.ConfigurationTask task = tasks.poll();
+                                        removedTasks++;
+                                        LOGGER.info("ServerCommonPacketListenerMixin: Removed task: {}", task.getClass().getName());
+                                    }
+                                    
+                                    if (removedTasks > 0) {
+                                        LOGGER.info("ServerCommonPacketListenerMixin: Cleared {} remaining tasks for Bedrock player: {}", removedTasks, playerName);
+                                    }
+                                } catch (Exception taskException) {
+                                    LOGGER.debug("ServerCommonPacketListenerMixin: Could not clear task queue: {}", taskException.getMessage());
+                                }
+                                
+                                // Now try to finish the configuration
                                 try {
                                     java.lang.reflect.Method finishMethod = 
                                         net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
@@ -72,6 +94,18 @@ public class ServerCommonPacketListenerMixin {
                                     LOGGER.info("ServerCommonPacketListenerMixin: Successfully completed configuration for Bedrock player: {}", playerName);
                                 } catch (Exception methodException) {
                                     LOGGER.debug("ServerCommonPacketListenerMixin: Could not call finishConfiguration: {}", methodException.getMessage());
+                                    
+                                    // Try alternative completion methods
+                                    try {
+                                        // Try to transition to play phase directly
+                                        java.lang.reflect.Method switchToPlayMethod = 
+                                            net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("switchToPlayPhase");
+                                        switchToPlayMethod.setAccessible(true);
+                                        switchToPlayMethod.invoke(configListener);
+                                        LOGGER.info("ServerCommonPacketListenerMixin: Successfully switched to play phase for Bedrock player: {}", playerName);
+                                    } catch (Exception switchException) {
+                                        LOGGER.debug("ServerCommonPacketListenerMixin: Could not switch to play phase: {}", switchException.getMessage());
+                                    }
                                 }
                             }
                         } catch (Exception completionException) {
