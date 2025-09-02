@@ -11,7 +11,9 @@
     "NeoForgeVersionCheckMixin",
     "NeoForgeNetworkingMixin",
     "ConnectionTransitionMixin",
-    "NeoForgeConnectionMixin"
+    "NeoForgeConnectionMixin",
+    "GlobalDisconnectMixin",
+    "UniversalDisconnectMixin"
   ],
   "injectors": {
     "defaultRequire": 0
