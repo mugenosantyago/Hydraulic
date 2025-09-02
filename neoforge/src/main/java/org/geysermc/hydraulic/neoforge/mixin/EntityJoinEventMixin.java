@@ -10,36 +10,35 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * This mixin prevents problematic mod events from firing for Bedrock players
- * that would try to send custom packets.
+ * This mixin prevents Wormhole mod from processing Bedrock players during PlayerLoggedInEvent.
  */
-@Mixin(targets = "com.legacy.good_nights_sleep.event.GNSPlayerEvents", remap = false)
+@Mixin(targets = "com.supermartijn642.wormhole.PortalGroupCapability", remap = false)
 public class EntityJoinEventMixin {
     private static final Logger LOGGER = LoggerFactory.getLogger("EntityJoinEventMixin");
 
     /**
-     * Prevents the Good Night's Sleep mod from processing Bedrock players.
+     * Prevents the Wormhole mod from processing Bedrock players.
      */
     @Inject(
-        method = "onEntityJoin",
+        method = "onJoin",
         at = @At("HEAD"),
         cancellable = true,
         remap = false,
         require = 0
     )
-    private static void preventGoodNightsSleepForBedrock(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event, CallbackInfo ci) {
+    private static void preventWormholeForBedrock(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent event, CallbackInfo ci) {
         try {
             if (event.getEntity() instanceof ServerPlayer player) {
                 String playerName = player.getGameProfile().getName();
                 boolean isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);
                 
                 if (isBedrockPlayer) {
-                    LOGGER.info("EntityJoinEventMixin: Preventing Good Night's Sleep mod event for Bedrock player: {}", playerName);
+                    LOGGER.info("EntityJoinEventMixin: Preventing Wormhole mod event for Bedrock player: {}", playerName);
                     ci.cancel();
                 }
             }
         } catch (Exception e) {
-            LOGGER.debug("EntityJoinEventMixin: Exception in event prevention: {}", e.getMessage());
+            LOGGER.debug("EntityJoinEventMixin: Exception in Wormhole prevention: {}", e.getMessage());
         }
     }
 }
