@@ -35,6 +35,12 @@ public abstract class MinecraftResourcePackReaderImplMixin {
     private JsonElement parseJson(JsonReader reader) {
         try {
             return GsonUtil.parseReader(reader);
+        } catch (com.google.gson.JsonSyntaxException e) {
+            if (e.getCause() instanceof com.google.gson.stream.MalformedJsonException) {
+                LOGGER.warn("Skipping malformed JSON file: {}. This is likely due to a corrupted mod resource file.", e.getMessage());
+            } else {
+                LOGGER.error("Failed to parse JSON due to syntax error: " + e.getMessage());
+            }
         } catch (Exception e) {
             LOGGER.error("Failed to parse JSON: " + e.getMessage());
         }
@@ -60,6 +66,19 @@ public abstract class MinecraftResourcePackReaderImplMixin {
 
         try {
             return instance.deserializeFromJson(jsonElement, key);
+        } catch (IllegalArgumentException e) {
+            // Handle specific cases of known validation issues
+            if (e.getMessage() != null) {
+                if (e.getMessage().contains("Unknown select property type")) {
+                    LOGGER.warn("Skipping item model with unknown select property type (" + key + "): " + e.getMessage());
+                } else if (e.getMessage().contains("Angle must be multiple of 22.5, in range of -45 to 45")) {
+                    LOGGER.warn("Skipping model with invalid rotation angle (" + key + "): " + e.getMessage());
+                } else {
+                    LOGGER.error("Failed to deserialize JSON (" + key + "): " + e.getMessage());
+                }
+            } else {
+                LOGGER.error("Failed to deserialize JSON (" + key + "): " + e.getMessage());
+            }
         } catch (Exception e) {
             LOGGER.error("Failed to deserialize JSON (" + key + "): " + e.getMessage());
         }

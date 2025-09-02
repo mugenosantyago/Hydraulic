@@ -1,6 +1,8 @@
 package org.geysermc.hydraulic.mixin.ext;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -10,6 +12,8 @@ import java.util.Map;
 
 @Mixin(targets = "team.unnamed.creative.serialize.minecraft.model.ModelSerializer", remap = false)
 public class ModelSerializerMixin {
+    private static final Logger LOGGER = LoggerFactory.getLogger("ModelSerializerMixin");
+
     @Redirect(
         method = "deserializeFromJson(Lcom/google/gson/JsonElement;Lnet/kyori/adventure/key/Key;)Lteam/unnamed/creative/model/Model;",
         at = @At(
@@ -41,5 +45,26 @@ public class ModelSerializerMixin {
         }
 
         return instance.put(k, v);
+    }
+
+    @Redirect(
+        method = "readElementRotation",
+        at = @At(
+            value = "INVOKE",
+            target = "Lteam/unnamed/creative/model/ElementRotation$Builder;build()Lteam/unnamed/creative/model/ElementRotation;"
+        )
+    )
+    private team.unnamed.creative.model.ElementRotation redirectElementRotationBuild(team.unnamed.creative.model.ElementRotation.Builder builder) {
+        try {
+            return builder.build();
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage() != null && e.getMessage().contains("Angle must be multiple of 22.5, in range of -45 to 45")) {
+                LOGGER.warn("Invalid rotation angle in model element: {}. Using default rotation to prevent crash.", e.getMessage());
+                // Return null to skip the rotation element entirely
+                return null;
+            } else {
+                throw e;
+            }
+        }
     }
 }
