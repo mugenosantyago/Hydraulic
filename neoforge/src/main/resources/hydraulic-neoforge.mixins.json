@@ -18,11 +18,8 @@
     "ConfigurationCompletionMixin",
     "CustomPacketMixin",
     "EntityJoinEventMixin",
-    "ModCompatibilityMixin$GoodNightsSleepMixin",
-    "ModCompatibilityMixin$WormholeMixin",
-    "ModCompatibilityMixin$DiscCordMixin",
-    "ModCompatibilityMixin$ServerChatSyncMixin",
-    "ModCompatibilityMixin$GlitchCoreMixin"
+    "GoodNightsSleepMixin",
+    "WormholeMixin"
   ],
   "injectors": {
     "defaultRequire": 0
