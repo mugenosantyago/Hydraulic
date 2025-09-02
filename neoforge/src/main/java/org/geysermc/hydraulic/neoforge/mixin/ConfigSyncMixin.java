@@ -1,11 +1,13 @@
 package org.geysermc.hydraulic.neoforge.mixin;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.network.ConfigurationTask;
 import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
 import org.geysermc.geyser.api.GeyserApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -14,6 +16,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class ConfigSyncMixin {
     private static final Logger LOGGER = LoggerFactory.getLogger("ConfigSyncMixin");
     private boolean isBedrockPlayer = false;
+
+    @Shadow
+    private ConfigurationTask currentTask;
 
     /**
      * Detects Bedrock players during configuration initialization.
@@ -36,18 +41,37 @@ public class ConfigSyncMixin {
     }
 
     /**
-     * Logs when configuration starts and attempts to skip it for Bedrock players.
+     * Logs when configuration starts for Bedrock players but allows it to proceed.
      */
     @Inject(
         method = "startConfiguration",
-        at = @At("HEAD"),
-        cancellable = true
+        at = @At("HEAD")
     )
-    private void bypassConfigurationForBedrock(CallbackInfo ci) {
+    private void logConfigurationStart(CallbackInfo ci) {
         if (this.isBedrockPlayer) {
-            LOGGER.info("ConfigSyncMixin: Attempting to skip configuration phase for Bedrock player");
-            // Simply cancel the configuration start - this should prevent NeoForge tasks from being added
-            ci.cancel();
+            LOGGER.info("ConfigSyncMixin: Configuration starting for Bedrock player - monitoring for NeoForge tasks");
+        }
+    }
+
+    /**
+     * Intercepts task execution to skip NeoForge-specific tasks for Bedrock players.
+     */
+    @Inject(
+        method = "tick",
+        at = @At("HEAD")
+    )
+    private void interceptTaskExecution(CallbackInfo ci) {
+        if (this.isBedrockPlayer && this.currentTask != null) {
+            try {
+                String taskClass = this.currentTask.getClass().getName();
+                if (taskClass.contains("neoforged") || taskClass.contains("SyncConfig")) {
+                    LOGGER.info("ConfigSyncMixin: Completing NeoForge task immediately for Bedrock player: {}", taskClass);
+                    ServerConfigurationPacketListenerImpl self = (ServerConfigurationPacketListenerImpl) (Object) this;
+                    self.finishCurrentTask(this.currentTask.type());
+                }
+            } catch (Exception e) {
+                // Ignore errors and let normal processing continue
+            }
         }
     }
 }
