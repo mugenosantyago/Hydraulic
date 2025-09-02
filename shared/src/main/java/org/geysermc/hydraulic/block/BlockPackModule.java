@@ -361,7 +361,7 @@ public class BlockPackModule extends ConvertablePackModule<BlockPackModule, Mode
             CustomBlockComponents.Builder componentsBuilder = baseComponentBuilder
                     .displayName("%" + block.getDescriptionId())
                     .friction(Math.min(1 - block.getFriction(), 0.9f))
-                    .destructibleByMining(block.defaultDestroyTime()) // TODO: Check
+                    .destructibleByMining(Math.max(0.0f, block.defaultDestroyTime())) // Ensure non-negative for unbreakable blocks
                     // .unitCube(true) // TODO: Geometry conversion
                     .selectionBox(createBoxComponent(shape))
                     .collisionBox(createBoxComponent(collisionShape));
@@ -402,7 +402,7 @@ public class BlockPackModule extends ConvertablePackModule<BlockPackModule, Mode
                 JavaBlockState.Builder javaBlockStateBuilder = JavaBlockState.builder()
                         .identifier(BlockStateParser.serialize(state))
                         .javaId(Block.getId(state))
-                        .blockHardness(block.defaultDestroyTime()) // TODO: Check
+                        .blockHardness(Math.max(0.0f, block.defaultDestroyTime())) // Ensure non-negative for unbreakable blocks
                         .canBreakWithHand(!state.requiresCorrectToolForDrops())
                         .waterlogged(state.hasProperty(BlockStateProperties.WATERLOGGED) && state.getValue(BlockStateProperties.WATERLOGGED))
                         .stateGroupId(blockId)
