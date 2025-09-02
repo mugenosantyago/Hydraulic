@@ -18,7 +18,8 @@
     "ConfigurationCompletionMixin",
     "CustomPacketMixin",
     "GoodNightsSleepMixin",
-    "IncompatibleClientMixin"
+    "IncompatibleClientMixin",
+    "NetworkProtocolMixin"
   ],
   "injectors": {
     "defaultRequire": 0
