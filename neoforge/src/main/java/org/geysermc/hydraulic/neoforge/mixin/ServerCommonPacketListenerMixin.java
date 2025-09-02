@@ -57,6 +57,27 @@ public class ServerCommonPacketListenerMixin {
                     if (isBedrockPlayer) {
                         LOGGER.info("ServerCommonPacketListenerMixin: Preventing NeoForge common-level disconnect for Bedrock player: {} (Message: {})", 
                             playerName, disconnectMessage);
+                        
+                        // Try to help the connection complete by transitioning to play phase
+                        try {
+                            if (self instanceof net.minecraft.server.network.ServerConfigurationPacketListenerImpl configListener) {
+                                LOGGER.info("ServerCommonPacketListenerMixin: Attempting to complete configuration for Bedrock player: {}", playerName);
+                                
+                                // Use reflection to call finishConfiguration if possible
+                                try {
+                                    java.lang.reflect.Method finishMethod = 
+                                        net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
+                                    finishMethod.setAccessible(true);
+                                    finishMethod.invoke(configListener);
+                                    LOGGER.info("ServerCommonPacketListenerMixin: Successfully completed configuration for Bedrock player: {}", playerName);
+                                } catch (Exception methodException) {
+                                    LOGGER.debug("ServerCommonPacketListenerMixin: Could not call finishConfiguration: {}", methodException.getMessage());
+                                }
+                            }
+                        } catch (Exception completionException) {
+                            LOGGER.debug("ServerCommonPacketListenerMixin: Exception during configuration completion: {}", completionException.getMessage());
+                        }
+                        
                         ci.cancel();
                         return;
                     }
