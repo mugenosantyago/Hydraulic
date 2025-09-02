@@ -67,6 +67,13 @@ public class NetworkProtocolMixin {
                             // Even if we can't identify the player, log this for debugging
                             LOGGER.info("NetworkProtocolMixin: Detected NeoForge disconnect message at network level: {} (Player: {})", 
                                 disconnectMessage, playerName != null ? playerName : "unknown");
+                                
+                            // If the message contains "Incompatible client", try to prevent it anyway as a fallback
+                            if (disconnectMessage.contains("Incompatible client")) {
+                                LOGGER.info("NetworkProtocolMixin: Preventing 'Incompatible client' disconnect as fallback protection");
+                                ci.cancel();
+                                return;
+                            }
                         }
                     } catch (Exception e) {
                         LOGGER.debug("NetworkProtocolMixin: Exception in network disconnect prevention: {}", e.getMessage());

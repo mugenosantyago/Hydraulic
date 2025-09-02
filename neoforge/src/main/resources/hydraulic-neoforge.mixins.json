@@ -19,7 +19,8 @@
     "CustomPacketMixin",
     "GoodNightsSleepMixin",
     "IncompatibleClientMixin",
-    "NetworkProtocolMixin"
+    "NetworkProtocolMixin",
+    "PacketErrorHandlerMixin"
   ],
   "injectors": {
     "defaultRequire": 0
