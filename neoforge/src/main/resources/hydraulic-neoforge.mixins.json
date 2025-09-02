@@ -16,7 +16,8 @@
     "GlobalDisconnectMixin",
     "ServerCommonPacketListenerMixin",
     "ConfigurationCompletionMixin",
-    "CustomPacketMixin"
+    "CustomPacketMixin",
+    "EntityJoinEventMixin"
   ],
   "injectors": {
     "defaultRequire": 0
