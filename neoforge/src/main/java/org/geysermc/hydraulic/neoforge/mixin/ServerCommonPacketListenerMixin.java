@@ -85,27 +85,67 @@ public class ServerCommonPacketListenerMixin {
                                     LOGGER.debug("ServerCommonPacketListenerMixin: Could not clear task queue: {}", taskException.getMessage());
                                 }
                                 
-                                // Now try to finish the configuration
+                                // Now try to finish the configuration using multiple approaches
+                                boolean configurationCompleted = false;
+                                
+                                // Method 1: Try finishConfiguration
                                 try {
                                     java.lang.reflect.Method finishMethod = 
                                         net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
                                     finishMethod.setAccessible(true);
                                     finishMethod.invoke(configListener);
-                                    LOGGER.info("ServerCommonPacketListenerMixin: Successfully completed configuration for Bedrock player: {}", playerName);
+                                    LOGGER.info("ServerCommonPacketListenerMixin: Successfully completed configuration via finishConfiguration for Bedrock player: {}", playerName);
+                                    configurationCompleted = true;
                                 } catch (Exception methodException) {
-                                    LOGGER.debug("ServerCommonPacketListenerMixin: Could not call finishConfiguration: {}", methodException.getMessage());
-                                    
-                                    // Try alternative completion methods
+                                    LOGGER.info("ServerCommonPacketListenerMixin: finishConfiguration failed: {}", methodException.getMessage());
+                                }
+                                
+                                // Method 2: Try switchToPlayPhase if finishConfiguration failed
+                                if (!configurationCompleted) {
                                     try {
-                                        // Try to transition to play phase directly
                                         java.lang.reflect.Method switchToPlayMethod = 
                                             net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("switchToPlayPhase");
                                         switchToPlayMethod.setAccessible(true);
                                         switchToPlayMethod.invoke(configListener);
                                         LOGGER.info("ServerCommonPacketListenerMixin: Successfully switched to play phase for Bedrock player: {}", playerName);
+                                        configurationCompleted = true;
                                     } catch (Exception switchException) {
-                                        LOGGER.debug("ServerCommonPacketListenerMixin: Could not switch to play phase: {}", switchException.getMessage());
+                                        LOGGER.info("ServerCommonPacketListenerMixin: switchToPlayPhase failed: {}", switchException.getMessage());
                                     }
+                                }
+                                
+                                // Method 3: Try to find and call any method that might complete configuration
+                                if (!configurationCompleted) {
+                                    try {
+                                        java.lang.reflect.Method[] methods = net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethods();
+                                        LOGGER.info("ServerCommonPacketListenerMixin: Available methods for configuration completion:");
+                                        for (java.lang.reflect.Method method : methods) {
+                                            String methodName = method.getName();
+                                            LOGGER.info("  - {}", methodName);
+                                            
+                                            // Try methods that sound like they complete configuration
+                                            if (methodName.contains("finish") || methodName.contains("complete") || 
+                                                methodName.contains("transition") || methodName.contains("switch")) {
+                                                try {
+                                                    if (method.getParameterCount() == 0) {
+                                                        method.setAccessible(true);
+                                                        method.invoke(configListener);
+                                                        LOGGER.info("ServerCommonPacketListenerMixin: Successfully called {} for Bedrock player: {}", methodName, playerName);
+                                                        configurationCompleted = true;
+                                                        break;
+                                                    }
+                                                } catch (Exception methodCallException) {
+                                                    LOGGER.debug("ServerCommonPacketListenerMixin: Method {} failed: {}", methodName, methodCallException.getMessage());
+                                                }
+                                            }
+                                        }
+                                    } catch (Exception reflectionException) {
+                                        LOGGER.debug("ServerCommonPacketListenerMixin: Could not enumerate methods: {}", reflectionException.getMessage());
+                                    }
+                                }
+                                
+                                if (!configurationCompleted) {
+                                    LOGGER.warn("ServerCommonPacketListenerMixin: Failed to complete configuration for Bedrock player: {} - connection may be stuck", playerName);
                                 }
                             }
                         } catch (Exception completionException) {
