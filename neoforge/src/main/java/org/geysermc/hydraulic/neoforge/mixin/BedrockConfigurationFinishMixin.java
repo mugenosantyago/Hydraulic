@@ -60,40 +60,35 @@ public class BedrockConfigurationFinishMixin {
                             // Mark this player as handled to prevent duplicate processing
                             handledPlayers.add(playerName);
                             
-                            // Cancel the original startNextTask since we have no tasks
-                            ci.cancel();
+                            // Don't cancel the original flow - let it try to complete naturally first
+                            // This ensures all dimension data and mod initialization happens properly
+                            LOGGER.info("BedrockConfigurationFinishMixin: Allowing natural flow, will use returnToWorld as fallback for: {}", playerName);
                             
-                            // Use the returnToWorld method - this is what the returntoworld command does!
-                            LOGGER.info("BedrockConfigurationFinishMixin: Starting returnToWorld completion for: {}", playerName);
-                            
-                            try {
-                                // Try to call returnToWorld method directly
-                                java.lang.reflect.Method returnToWorldMethod = 
-                                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("returnToWorld");
-                                returnToWorldMethod.setAccessible(true);
-                                returnToWorldMethod.invoke(self);
-                                
-                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully called returnToWorld for: {}", playerName);
-                                return;
-                                
-                            } catch (Exception returnException) {
-                                LOGGER.error("BedrockConfigurationFinishMixin: returnToWorld failed for {}: {}", 
-                                    playerName, returnException.getMessage());
-                                
-                                // Fallback: Try finishConfiguration as backup
+                            // Schedule returnToWorld as a fallback in case the natural flow gets stuck
+                            java.util.concurrent.CompletableFuture.runAsync(() -> {
                                 try {
-                                    java.lang.reflect.Method finishMethod = 
-                                        ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
-                                    finishMethod.setAccessible(true);
-                                    finishMethod.invoke(self);
+                                    // Wait longer to let the natural configuration process attempt to complete
+                                    // This gives time for Good Night's Sleep dimensions and other mod data to initialize
+                                    Thread.sleep(2000); // 2 second delay
                                     
-                                    LOGGER.info("BedrockConfigurationFinishMixin: Fallback finishConfiguration succeeded for: {}", playerName);
+                                    LOGGER.info("BedrockConfigurationFinishMixin: Fallback timer expired, calling returnToWorld for: {}", playerName);
                                     
-                                } catch (Exception finishException) {
-                                    LOGGER.error("BedrockConfigurationFinishMixin: All completion methods failed for {}: {}", 
-                                        playerName, finishException.getMessage());
+                                    // Try to call returnToWorld method as fallback
+                                    java.lang.reflect.Method returnToWorldMethod = 
+                                        ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("returnToWorld");
+                                    returnToWorldMethod.setAccessible(true);
+                                    returnToWorldMethod.invoke(self);
+                                    
+                                    LOGGER.info("BedrockConfigurationFinishMixin: Successfully called fallback returnToWorld for: {}", playerName);
+                                    
+                                } catch (Exception returnException) {
+                                    LOGGER.error("BedrockConfigurationFinishMixin: Fallback returnToWorld failed for {}: {}", 
+                                        playerName, returnException.getMessage());
                                 }
-                            }
+                            });
+                            
+                            // Don't cancel - let the original startNextTask run to allow natural completion
+                            return;
                         }
                     } catch (Exception reflectionException) {
                         LOGGER.debug("BedrockConfigurationFinishMixin: Could not access task queue: {}", reflectionException.getMessage());
