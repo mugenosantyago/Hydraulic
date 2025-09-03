@@ -16,6 +16,7 @@
     "ServerCommonPacketListenerMixin",
     "BedrockConfigurationFinishMixin",
 
+    "BedrockSpawnDimensionMixin",
     "CustomPacketMixin",
     "GoodNightsSleepMixin",
     "IncompatibleClientMixin",
