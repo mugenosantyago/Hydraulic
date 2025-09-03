@@ -51,8 +51,9 @@ public class ConfigurationCompletionMixin {
                             
                             // Try to finish the configuration since no tasks are left
                             try {
-                                // Try multiple method names for finishing configuration (avoid returnToWorld to prevent protocol errors)
+                                // Try multiple method names for finishing configuration (try runConfiguration first)
                                 String[] finishMethodNames = {
+                                    "runConfiguration", // Found in debug output - might handle completion
                                     "finishConfiguration",
                                     "m_294354_", // Common obfuscated name
                                     "completeConfiguration",
@@ -157,8 +158,9 @@ public class ConfigurationCompletionMixin {
                                     LOGGER.info("ConfigurationCompletionMixin: All NeoForge tasks removed, finishing configuration for Bedrock player: {}", 
                                         self.getOwner().getName());
                                     
-                                    // Try multiple method names for finishing configuration (avoid returnToWorld to prevent protocol errors)
+                                    // Try multiple method names for finishing configuration (try runConfiguration first)
                                     String[] finishMethodNames = {
+                                        "runConfiguration", // Found in debug output - might handle completion
                                         "finishConfiguration",
                                         "m_294354_", // Common obfuscated name
                                         "completeConfiguration",
