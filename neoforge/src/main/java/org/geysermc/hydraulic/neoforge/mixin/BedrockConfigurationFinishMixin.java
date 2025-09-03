@@ -51,46 +51,42 @@ public class BedrockConfigurationFinishMixin {
                             // Cancel the original startNextTask to prevent loops
                             ci.cancel();
                             
-                            // Send finish configuration packet on behalf of the Bedrock client
+                            // Try to directly call handleConfigurationFinished with null (some methods accept null)
                             try {
-                                // Get the connection to send the packet
-                                java.lang.reflect.Field connectionField = ServerConfigurationPacketListenerImpl.class.getDeclaredField("connection");
-                                connectionField.setAccessible(true);
-                                net.minecraft.network.Connection connection = (net.minecraft.network.Connection) connectionField.get(self);
+                                java.lang.reflect.Method handleFinishMethod = 
+                                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("handleConfigurationFinished", 
+                                        Class.forName("net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket"));
+                                handleFinishMethod.setAccessible(true);
+                                handleFinishMethod.invoke(self, (Object) null);
                                 
-                                // Create and send a finish configuration packet
-                                Class<?> finishPacketClass = Class.forName("net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket");
-                                Object finishPacket = finishPacketClass.getDeclaredConstructor().newInstance();
-                                
-                                // Send the packet to the connection which should trigger handleConfigurationFinished
-                                java.lang.reflect.Method sendMethod = net.minecraft.network.Connection.class.getDeclaredMethod("send", 
-                                    net.minecraft.network.protocol.Packet.class);
-                                sendMethod.setAccessible(true);
-                                sendMethod.invoke(connection, finishPacket);
-                                
-                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully sent finish configuration packet for Bedrock player: {}", 
+                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully called handleConfigurationFinished with null for: {}", 
                                     playerName);
                                 
-                            } catch (Exception packetException) {
-                                LOGGER.warn("BedrockConfigurationFinishMixin: Could not send finish packet for {}: {}", 
-                                    playerName, packetException.getMessage());
+                            } catch (Exception directException) {
+                                LOGGER.debug("BedrockConfigurationFinishMixin: handleConfigurationFinished with null failed: {}", directException.getMessage());
                                 
-                                // If packet sending fails, try direct method invocation
+                                // Try alternative approach: look for other completion methods
                                 try {
-                                    java.lang.reflect.Method handleFinishMethod = 
-                                        ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("handleConfigurationFinished", 
-                                            Class.forName("net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket"));
-                                    handleFinishMethod.setAccessible(true);
+                                    // Try to find any method that looks like it completes configuration
+                                    java.lang.reflect.Method[] methods = ServerConfigurationPacketListenerImpl.class.getDeclaredMethods();
+                                    for (java.lang.reflect.Method method : methods) {
+                                        if (method.getName().contains("finish") || method.getName().contains("complete") || 
+                                            method.getName().contains("transition") || method.getName().contains("play")) {
+                                            
+                                            if (method.getParameterCount() == 0) {
+                                                method.setAccessible(true);
+                                                method.invoke(self);
+                                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully called {} for: {}", 
+                                                    method.getName(), playerName);
+                                                return;
+                                            }
+                                        }
+                                    }
                                     
-                                    Class<?> finishPacketClass = Class.forName("net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket");
-                                    Object finishPacket = finishPacketClass.getDeclaredConstructor().newInstance();
-                                    handleFinishMethod.invoke(self, finishPacket);
-                                    
-                                    LOGGER.info("BedrockConfigurationFinishMixin: Successfully called handleConfigurationFinished directly for: {}", 
-                                        playerName);
-                                } catch (Exception directException) {
-                                    LOGGER.error("BedrockConfigurationFinishMixin: All completion methods failed for {}: {}", 
-                                        playerName, directException.getMessage());
+                                    LOGGER.warn("BedrockConfigurationFinishMixin: No suitable completion method found for: {}", playerName);
+                                } catch (Exception methodException) {
+                                    LOGGER.error("BedrockConfigurationFinishMixin: Method search failed for {}: {}", 
+                                        playerName, methodException.getMessage());
                                 }
                             }
                             
