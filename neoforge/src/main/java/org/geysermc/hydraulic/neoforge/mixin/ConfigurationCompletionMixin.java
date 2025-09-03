@@ -30,10 +30,11 @@ public class ConfigurationCompletionMixin {
             ServerConfigurationPacketListenerImpl self = (ServerConfigurationPacketListenerImpl) (Object) this;
             
             if (self.getOwner() != null) {
+                String playerName = self.getOwner().getName();
                 boolean isBedrockPlayer = BedrockDetectionHelper.isBedrockPlayer(self);
                 
                 LOGGER.info("ConfigurationCompletionMixin: startNextTask called for player {} (Bedrock: {})", 
-                    self.getOwner().getName(), isBedrockPlayer);
+                    playerName, isBedrockPlayer);
                 
                 if (isBedrockPlayer) {
                     try {
@@ -50,7 +51,7 @@ public class ConfigurationCompletionMixin {
                             
                             // Try to finish the configuration since no tasks are left
                             try {
-                                // Try multiple method names for finishing configuration
+                                // Try multiple method names for finishing configuration (avoid returnToWorld to prevent protocol errors)
                                 String[] finishMethodNames = {
                                     "finishConfiguration",
                                     "m_294354_", // Common obfuscated name
@@ -66,7 +67,7 @@ public class ConfigurationCompletionMixin {
                                         finishMethod.setAccessible(true);
                                         finishMethod.invoke(self);
                                         LOGGER.info("ConfigurationCompletionMixin: Successfully finished configuration using {} for Bedrock player: {}", 
-                                            methodName, self.getOwner().getName());
+                                            methodName, playerName);
                                         finished = true;
                                         ci.cancel();
                                         return;
@@ -76,33 +77,62 @@ public class ConfigurationCompletionMixin {
                                 }
                                 
                                 if (!finished) {
-                                    LOGGER.warn("ConfigurationCompletionMixin: Could not find finish method, trying manual transition");
+                                    LOGGER.warn("ConfigurationCompletionMixin: Could not find finish method, trying returnToWorld as last resort");
                                     
-                                    // Try to manually transition to game phase
+                                    // Try returnToWorld as last resort, but with better error handling
                                     try {
-                                        // Look for methods that might transition to game
-                                        String[] transitionMethods = {
-                                            "switchToGame",
-                                            "startGame", 
-                                            "enterGame"
-                                        };
+                                        java.lang.reflect.Method returnToWorldMethod = 
+                                            ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("returnToWorld");
+                                        returnToWorldMethod.setAccessible(true);
+                                        returnToWorldMethod.invoke(self);
+                                        LOGGER.info("ConfigurationCompletionMixin: Successfully used returnToWorld as last resort for: {}", 
+                                            playerName);
+                                        finished = true;
+                                        ci.cancel();
+                                        return;
+                                    } catch (Exception returnException) {
+                                        LOGGER.warn("ConfigurationCompletionMixin: returnToWorld also failed: {}", returnException.getMessage());
+                                    }
+                                    
+                                    // List all methods to find the right one
+                                    try {
+                                        java.lang.reflect.Method[] allMethods = 
+                                            ServerConfigurationPacketListenerImpl.class.getDeclaredMethods();
                                         
-                                        for (String transMethod : transitionMethods) {
-                                            try {
-                                                java.lang.reflect.Method method = 
-                                                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod(transMethod);
-                                                method.setAccessible(true);
-                                                method.invoke(self);
-                                                LOGGER.info("ConfigurationCompletionMixin: Transitioned using {} for Bedrock player: {}", 
-                                                    transMethod, self.getOwner().getName());
-                                                finished = true;
-                                                break;
-                                            } catch (NoSuchMethodException e) {
-                                                continue;
+                                        LOGGER.info("ConfigurationCompletionMixin: Available methods for debugging:");
+                                        for (java.lang.reflect.Method method : allMethods) {
+                                            if (method.getParameterCount() == 0) { // Only no-parameter methods
+                                                LOGGER.info("ConfigurationCompletionMixin: Method: {} (returns: {})", 
+                                                    method.getName(), method.getReturnType().getSimpleName());
                                             }
                                         }
-                                    } catch (Exception transException) {
-                                        LOGGER.warn("ConfigurationCompletionMixin: Manual transition failed: {}", transException.getMessage());
+                                        
+                                        // Try methods that might be related to finishing/completing
+                                        for (java.lang.reflect.Method method : allMethods) {
+                                            if (method.getParameterCount() == 0) {
+                                                String methodName = method.getName().toLowerCase();
+                                                if (methodName.contains("finish") || 
+                                                    methodName.contains("complete") || 
+                                                    methodName.contains("transition") ||
+                                                    methodName.contains("game") ||
+                                                    methodName.startsWith("m_") && methodName.length() < 15) { // Obfuscated methods are usually short
+                                                    
+                                                    try {
+                                                        method.setAccessible(true);
+                                                        method.invoke(self);
+                                                        LOGGER.info("ConfigurationCompletionMixin: SUCCESS! Transitioned using {} for Bedrock player: {}", 
+                                                            method.getName(), self.getOwner().getName());
+                                                        finished = true;
+                                                        break;
+                                                    } catch (Exception methodException) {
+                                                        LOGGER.debug("ConfigurationCompletionMixin: Method {} failed: {}", 
+                                                            method.getName(), methodException.getMessage());
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } catch (Exception reflectionException) {
+                                        LOGGER.warn("ConfigurationCompletionMixin: Could not examine methods: {}", reflectionException.getMessage());
                                     }
                                 }
                                 
@@ -139,7 +169,7 @@ public class ConfigurationCompletionMixin {
                                     LOGGER.info("ConfigurationCompletionMixin: All NeoForge tasks removed, finishing configuration for Bedrock player: {}", 
                                         self.getOwner().getName());
                                     
-                                    // Try multiple method names for finishing configuration
+                                    // Try multiple method names for finishing configuration (avoid returnToWorld to prevent protocol errors)
                                     String[] finishMethodNames = {
                                         "finishConfiguration",
                                         "m_294354_", // Common obfuscated name
@@ -155,7 +185,7 @@ public class ConfigurationCompletionMixin {
                                             finishMethod.setAccessible(true);
                                             finishMethod.invoke(self);
                                             LOGGER.info("ConfigurationCompletionMixin: Configuration completed using {} for Bedrock player: {}", 
-                                                methodName, self.getOwner().getName());
+                                                methodName, playerName);
                                             finished = true;
                                             ci.cancel();
                                             return;

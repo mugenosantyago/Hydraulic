@@ -53,69 +53,28 @@ public class NeoForgeVersionSpecificMixin {
                         LOGGER.info("NeoForgeVersionSpecificMixin: Preventing version-specific NeoForge disconnect for Bedrock player: {} (Message: {})", 
                             self.getOwner().getName(), disconnectMessage);
                         
-                        // After preventing the disconnect, manually trigger configuration completion
-                        LOGGER.info("NeoForgeVersionSpecificMixin: Disconnect prevented, now triggering configuration completion for: {}", 
+                        // Prevent the disconnect and trigger the configuration completion process
+                        LOGGER.info("NeoForgeVersionSpecificMixin: Disconnect prevented, triggering completion process for: {}", 
                             self.getOwner().getName());
                         
                         ci.cancel(); // Prevent the disconnect
                         
-                        // Try to manually complete the configuration since we prevented the disconnect
+                        // Try to trigger the configuration completion process without forcing returnToWorld
                         if (self instanceof net.minecraft.server.network.ServerConfigurationPacketListenerImpl) {
                             net.minecraft.server.network.ServerConfigurationPacketListenerImpl configListener = 
                                 (net.minecraft.server.network.ServerConfigurationPacketListenerImpl) self;
                             
-                            // Try multiple approaches to complete configuration
                             try {
-                                LOGGER.info("NeoForgeVersionSpecificMixin: Attempting to complete configuration for: {}", 
+                                // Only trigger startNextTask to let ConfigurationCompletionMixin handle the rest
+                                java.lang.reflect.Method startNextTaskMethod = 
+                                    net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("startNextTask");
+                                startNextTaskMethod.setAccessible(true);
+                                startNextTaskMethod.invoke(configListener);
+                                
+                                LOGGER.info("NeoForgeVersionSpecificMixin: Triggered startNextTask for Bedrock player: {}", 
                                     configListener.getOwner().getName());
-                                
-                                // Try different method names that might be used for finishing configuration
-                                String[] methodNames = {
-                                    "finishConfiguration",
-                                    "m_294354_", // Common obfuscated name pattern
-                                    "completeConfiguration",
-                                    "finishCurrentConfiguration",
-                                    "startNextTask" // This might trigger completion if no tasks remain
-                                };
-                                
-                                boolean success = false;
-                                for (String methodName : methodNames) {
-                                    try {
-                                        java.lang.reflect.Method method = 
-                                            net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod(methodName);
-                                        method.setAccessible(true);
-                                        method.invoke(configListener);
-                                        
-                                        LOGGER.info("NeoForgeVersionSpecificMixin: Successfully completed configuration using {} for Bedrock player: {}", 
-                                            methodName, configListener.getOwner().getName());
-                                        success = true;
-                                        break;
-                                    } catch (NoSuchMethodException e) {
-                                        // Try next method name
-                                        continue;
-                                    }
-                                }
-                                
-                                if (!success) {
-                                    LOGGER.warn("NeoForgeVersionSpecificMixin: Could not find suitable completion method, trying alternative approach");
-                                    
-                                    // Alternative: Try to clear the task queue and let normal flow handle it
-                                    try {
-                                        java.lang.reflect.Field tasksField = 
-                                            net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredField("configurationTasks");
-                                        tasksField.setAccessible(true);
-                                        @SuppressWarnings("unchecked")
-                                        java.util.Queue<?> tasks = (java.util.Queue<?>) tasksField.get(configListener);
-                                        tasks.clear();
-                                        
-                                        LOGGER.info("NeoForgeVersionSpecificMixin: Cleared configuration tasks for Bedrock player: {}", 
-                                            configListener.getOwner().getName());
-                                    } catch (Exception taskException) {
-                                        LOGGER.warn("NeoForgeVersionSpecificMixin: Could not clear tasks: {}", taskException.getMessage());
-                                    }
-                                }
                             } catch (Exception e) {
-                                LOGGER.warn("NeoForgeVersionSpecificMixin: Failed to complete configuration for {}: {}", 
+                                LOGGER.warn("NeoForgeVersionSpecificMixin: Could not trigger startNextTask for {}: {}", 
                                     configListener.getOwner().getName(), e.getMessage());
                             }
                         }
