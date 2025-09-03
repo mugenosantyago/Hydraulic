@@ -65,8 +65,8 @@ public class CustomPacketMixin {
                     }
                 }
                 
-                // Check for UpdateEnabledFeaturesPacket by string name (also causes pipeline errors for Bedrock players)
-                if (packetType.contains("UpdateEnabledFeaturesPacket")) {
+                // Check for other problematic packets by string name (also cause pipeline errors for Bedrock players)
+                if (packetType.contains("UpdateEnabledFeaturesPacket") || packetType.contains("SelectKnownPacks")) {
                     boolean isBedrockPlayer = false;
                     String playerName = null;
                     
@@ -83,8 +83,8 @@ public class CustomPacketMixin {
                     }
                     
                     if (isBedrockPlayer) {
-                        LOGGER.info("CustomPacketMixin: Preventing UpdateEnabledFeaturesPacket from being sent to Bedrock player: {} to avoid pipeline error", 
-                            playerName);
+                        LOGGER.info("CustomPacketMixin: Preventing {} from being sent to Bedrock player: {} to avoid pipeline error", 
+                            packetType.substring(packetType.lastIndexOf('.') + 1), playerName);
                         ci.cancel();
                         return;
                     }
