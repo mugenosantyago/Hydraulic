@@ -68,7 +68,47 @@ public class PackManager {
             // Common
             "floodgate",
             "mixinextras",
-            "cloud"
+            "cloud",
+            
+            // Mods with incompatible network packets or custom content
+            "wormhole",
+            "apexcore",
+            "betterpets",
+            "bettertridents",
+            "biomesoplenty",
+            "blue_grove",
+            "bluemap",
+            "chat_heads",
+            "collective",
+            "craft_elytra",
+            "dcintegration",
+            "disccord",
+            "dragondropselytra",
+            "dragonscalemod",
+            "explosionbreaksnoblock",
+            "firespreadtweaks",
+            "glitchcore",
+            "good_nights_sleep",
+            "gun_core",
+            "htay",
+            "infusedfoods",
+            "jean_caves",
+            "jetpack_boots",
+            "ketkets_player_shops",
+            "kissmod",
+            "lock_and_key",
+            "ly_graves",
+            "modern_guns",
+            "morevillagers",
+            "obsidianable",
+            "pet_gravestone",
+            "puzzleslib",
+            "regs_more_foods",
+            "serversleep",
+            "terrablender",
+            "tidal_towns",
+            "warpstones",
+            "woodenhopper"
     );
 
     private final HydraulicImpl hydraulic;
