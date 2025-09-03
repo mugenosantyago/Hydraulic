@@ -1,5 +1,7 @@
 package org.geysermc.hydraulic.neoforge.mixin;
 
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.custom.BrandPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.network.ServerCommonPacketListenerImpl;
 import org.geysermc.hydraulic.neoforge.util.BedrockDetectionHelper;
@@ -32,6 +34,61 @@ public class CustomPacketMixin {
             
             if (packet != null) {
                 String packetType = packet.getClass().getName();
+                
+                // Check for BrandPayload packets first (these cause pipeline errors for Bedrock players)
+                if (packet instanceof ClientboundCustomPayloadPacket) {
+                    ClientboundCustomPayloadPacket customPacket = (ClientboundCustomPayloadPacket) packet;
+                    if (customPacket.payload() instanceof BrandPayload) {
+                        BrandPayload brandPayload = (BrandPayload) customPacket.payload();
+                        
+                        boolean isBedrockPlayer = false;
+                        String playerName = null;
+                        
+                        if (self instanceof net.minecraft.server.network.ServerConfigurationPacketListenerImpl configListener) {
+                            isBedrockPlayer = BedrockDetectionHelper.isBedrockPlayer(configListener);
+                            if (configListener.getOwner() != null) {
+                                playerName = configListener.getOwner().getName();
+                            }
+                        } else if (self instanceof net.minecraft.server.network.ServerGamePacketListenerImpl gameListener) {
+                            if (gameListener.player != null) {
+                                playerName = gameListener.player.getGameProfile().getName();
+                                isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);
+                            }
+                        }
+                        
+                        if (isBedrockPlayer) {
+                            LOGGER.info("CustomPacketMixin: Preventing BrandPayload[brand={}] from being sent to Bedrock player: {} to avoid pipeline error", 
+                                brandPayload.brand(), playerName);
+                            ci.cancel();
+                            return;
+                        }
+                    }
+                }
+                
+                // Check for UpdateEnabledFeaturesPacket by string name (also causes pipeline errors for Bedrock players)
+                if (packetType.contains("UpdateEnabledFeaturesPacket")) {
+                    boolean isBedrockPlayer = false;
+                    String playerName = null;
+                    
+                    if (self instanceof net.minecraft.server.network.ServerConfigurationPacketListenerImpl configListener) {
+                        isBedrockPlayer = BedrockDetectionHelper.isBedrockPlayer(configListener);
+                        if (configListener.getOwner() != null) {
+                            playerName = configListener.getOwner().getName();
+                        }
+                    } else if (self instanceof net.minecraft.server.network.ServerGamePacketListenerImpl gameListener) {
+                        if (gameListener.player != null) {
+                            playerName = gameListener.player.getGameProfile().getName();
+                            isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);
+                        }
+                    }
+                    
+                    if (isBedrockPlayer) {
+                        LOGGER.info("CustomPacketMixin: Preventing UpdateEnabledFeaturesPacket from being sent to Bedrock player: {} to avoid pipeline error", 
+                            playerName);
+                        ci.cancel();
+                        return;
+                    }
+                }
                 
                 // Check if this is a custom packet (not vanilla Minecraft)
                 if (packetType.contains("good_nights_sleep") || packetType.contains("custom") || 
