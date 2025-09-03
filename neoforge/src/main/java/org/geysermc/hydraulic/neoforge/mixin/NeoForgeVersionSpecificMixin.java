@@ -53,22 +53,10 @@ public class NeoForgeVersionSpecificMixin {
                         LOGGER.info("NeoForgeVersionSpecificMixin: Preventing version-specific NeoForge disconnect for Bedrock player: {} (Message: {})", 
                             self.getOwner().getName(), disconnectMessage);
                         
-                        // Try to continue the configuration process
-                        try {
-                            // Use reflection to call finishConfiguration if it exists
-                            java.lang.reflect.Method finishConfigMethod = 
-                                ServerCommonPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
-                            finishConfigMethod.setAccessible(true);
-                            finishConfigMethod.invoke(self);
-                            LOGGER.info("NeoForgeVersionSpecificMixin: Successfully finished configuration for Bedrock player: {}", 
-                                self.getOwner().getName());
-                        } catch (Exception configException) {
-                            LOGGER.debug("NeoForgeVersionSpecificMixin: Could not finish configuration via reflection: {}", 
-                                configException.getMessage());
-                            
-                            // If we can't finish configuration, at least prevent the disconnect
-                            // The player might get stuck but won't be kicked
-                        }
+                        // Don't try to finish configuration here - let ConfigurationCompletionMixin handle it
+                        // This prevents conflicts and ensures proper timing
+                        LOGGER.info("NeoForgeVersionSpecificMixin: Disconnect prevented, letting ConfigurationCompletionMixin handle completion for: {}", 
+                            self.getOwner().getName());
                         
                         ci.cancel(); // Prevent the disconnect
                         return;
