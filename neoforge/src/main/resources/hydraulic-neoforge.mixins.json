@@ -14,7 +14,7 @@
     "NeoForgeConnectionMixin",
     "GlobalDisconnectMixin",
     "ServerCommonPacketListenerMixin",
-    "ConfigurationCompletionMixin",
+    "BedrockConfigurationFinishMixin",
 
     "CustomPacketMixin",
     "GoodNightsSleepMixin",

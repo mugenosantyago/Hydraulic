@@ -1,0 +1,126 @@
+---- Minecraft Crash Report ----
+// Sorry :(
+
+Time: 2025-09-03 16:34:50
+Description: Mod loading failures have occurred; consult the issue messages for more details
+
+net.neoforged.neoforge.logging.CrashReportExtender$ModLoadingCrashException: Mod loading has failed
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- Head --
+Thread: main
+Stacktrace:
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641) ~[?:?] {}
+-- Mod loading issue for: hydraulic --
+Details:
+	Caused by 0: java.lang.NoClassDefFoundError: org/geysermc/pack/converter/converter/Converter
+		at TRANSFORMER/generated_7f5e94e@1/org.geysermc.hydraulic.HydraulicImpl.<init>(HydraulicImpl.java:42) ~[9112865305261865752.jar%23218!/:?] {re:classloading}
+		at TRANSFORMER/generated_7f5e94e@1/org.geysermc.hydraulic.HydraulicImpl.load(HydraulicImpl.java:128) ~[9112865305261865752.jar%23218!/:?] {re:classloading}
+		at TRANSFORMER/hydraulic@1.0.0-SNAPSHOT/org.geysermc.hydraulic.neoforge.HydraulicNeoForgeMod.<init>(HydraulicNeoForgeMod.java:16) ~[%23216!/:?] {re:classloading}
+		at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62) ~[?:?] {}
+		at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502) ~[?:?] {}
+		at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486) ~[?:?] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.javafmlmod.FMLModContainer.constructMod(FMLModContainer.java:118) ~[loader-9.0.16.jar%23112!/:9.0] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.ModLoader.lambda$constructMods$3(ModLoader.java:151) ~[loader-9.0.16.jar%23112!/:9.0] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.ModLoader.lambda$dispatchParallelTask$7(ModLoader.java:229) ~[loader-9.0.16.jar%23112!/:9.0] {}
+		at java.base/java.util.concurrent.CompletableFuture.uniHandle(CompletableFuture.java:934) ~[?:?] {}
+		at java.base/java.util.concurrent.CompletableFuture$UniHandle.tryFire(CompletableFuture.java:911) ~[?:?] {}
+		at java.base/java.util.concurrent.CompletableFuture$Completion.exec(CompletableFuture.java:483) ~[?:?] {}
+		at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:387) ~[?:?] {}
+		at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1312) ~[?:?] {}
+		at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1843) ~[?:?] {re:computing_frames}
+		at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1808) ~[?:?] {re:computing_frames}
+		at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:188) ~[?:?] {}
+
+	Mod file: /Users/otoyume/Documents/GitHub/Hydraulic/neoforge/build/resources/main/
+	Failure message: Hydraulic (hydraulic) has failed to load correctly
+		java.lang.NoClassDefFoundError: org/geysermc/pack/converter/converter/Converter
+	Mod version: 1.0.0-SNAPSHOT
+	Mod issues URL: <No issues URL found>
+	Exception message: java.lang.ClassNotFoundException: org.geysermc.pack.converter.converter.Converter
+Stacktrace:
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641) ~[?:?] {}
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526) ~[?:?] {}
+	at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.loadClass(ModuleClassLoader.java:228) ~[securejarhandler-9.0.16.jar:?] {}
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526) ~[?:?] {}
+	at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.loadClass(ModuleClassLoader.java:228) ~[securejarhandler-9.0.16.jar:?] {}
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526) ~[?:?] {}
+	at TRANSFORMER/generated_7f5e94e@1/org.geysermc.hydraulic.HydraulicImpl.<init>(HydraulicImpl.java:42) ~[9112865305261865752.jar%23218!/:?] {re:classloading}
+	at TRANSFORMER/generated_7f5e94e@1/org.geysermc.hydraulic.HydraulicImpl.load(HydraulicImpl.java:128) ~[9112865305261865752.jar%23218!/:?] {re:classloading}
+	at TRANSFORMER/hydraulic@1.0.0-SNAPSHOT/org.geysermc.hydraulic.neoforge.HydraulicNeoForgeMod.<init>(HydraulicNeoForgeMod.java:16) ~[%23216!/:?] {re:classloading}
+	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62) ~[?:?] {}
+	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502) ~[?:?] {}
+	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486) ~[?:?] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.javafmlmod.FMLModContainer.constructMod(FMLModContainer.java:118) ~[loader-9.0.16.jar%23112!/:9.0] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.ModLoader.lambda$constructMods$3(ModLoader.java:151) ~[loader-9.0.16.jar%23112!/:9.0] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.ModLoader.lambda$dispatchParallelTask$7(ModLoader.java:229) ~[loader-9.0.16.jar%23112!/:9.0] {}
+	at java.base/java.util.concurrent.CompletableFuture.uniHandle(CompletableFuture.java:934) ~[?:?] {}
+	at java.base/java.util.concurrent.CompletableFuture$UniHandle.tryFire(CompletableFuture.java:911) ~[?:?] {}
+	at java.base/java.util.concurrent.CompletableFuture$Completion.exec(CompletableFuture.java:483) ~[?:?] {}
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:387) ~[?:?] {}
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1312) ~[?:?] {}
+	at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1843) ~[?:?] {re:computing_frames}
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1808) ~[?:?] {re:computing_frames}
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:188) ~[?:?] {}
+
+
+-- System Details --
+Details:
+	Minecraft Version: 1.21.8
+	Minecraft Version ID: 1.21.8
+	Operating System: Mac OS X (aarch64) version 15.5
+	Java Version: 21.0.8, Homebrew
+	Java VM Version: OpenJDK 64-Bit Server VM (mixed mode, sharing), Homebrew
+	Memory: 704317000 bytes (671 MiB) / 1887436800 bytes (1800 MiB) up to 6442450944 bytes (6144 MiB)
+	CPUs: 12
+	Processor Vendor: Apple Inc.
+	Processor Name: Apple M4 Pro
+	Identifier: Apple Inc. Family 0x1b588bb3 Model 0 Stepping 0
+	Microarchitecture: ARM64 SoC: Firestorm + Icestorm
+	Frequency (GHz): 0.00
+	Number of physical packages: 1
+	Number of physical CPUs: 12
+	Number of logical CPUs: 12
+	Graphics card #0 name: Apple M4 Pro
+	Graphics card #0 vendor: Apple (0x106b)
+	Graphics card #0 VRAM (MiB): 0.00
+	Graphics card #0 deviceId: unknown
+	Graphics card #0 versionInfo: unknown
+	Memory slot #0 capacity (MiB): 0.00
+	Memory slot #0 clockSpeed (GHz): 0.00
+	Memory slot #0 type: unknown
+	Virtual memory max (MiB): 26624.00
+	Virtual memory used (MiB): 19011.89
+	Swap memory total (MiB): 2048.00
+	Swap memory used (MiB): 797.13
+	Space in storage for jna.tmpdir (MiB): <path not set>
+	Space in storage for org.lwjgl.system.SharedLibraryExtractPath (MiB): <path not set>
+	Space in storage for io.netty.native.workdir (MiB): <path not set>
+	Space in storage for java.io.tmpdir (MiB): available: 7598.88, total: 471482.09
+	Space in storage for workdir (MiB): available: 7598.88, total: 471482.09
+	JVM Flags: 0 total; 
+	ModLauncher: 9.0
+	ModLauncher launch target: neoforgeserverdev
+	ModLauncher services: 
+		sponge-mixin-0.15.2+mixin.0.8.7.jar mixin PLUGINSERVICE 
+		loader-9.0.16.jar neoforgedevdistcleaner PLUGINSERVICE 
+		loader-9.0.16.jar slf4jfixer PLUGINSERVICE 
+		loader-9.0.16.jar runtime_enum_extender PLUGINSERVICE 
+		unprotect-1.3.1.jar unprotect PLUGINSERVICE 
+		loader-9.0.16.jar accesstransformer PLUGINSERVICE 
+		loader-9.0.16.jar mixin TRANSFORMATIONSERVICE 
+		loader-9.0.16.jar fml TRANSFORMATIONSERVICE 
+	FML Language Providers: 
+		javafml@9.0
+		minecraft@9.0
+	Mod List: 
+		9112865305261865752.jar                           |generated_7f5e94e             |generated_7f5e94e             |1                   |Manifest: NOSIGNATURE
+		main                                              |Hydraulic                     |hydraulic                     |1.0.0-SNAPSHOT      |Manifest: NOSIGNATURE
+		neoforge-21.8.21-minecraft-merged-1.21.8-loom.mapp|Minecraft                     |minecraft                     |1.21.8              |Manifest: NOSIGNATURE
+		neoforge-21.8.21-minecraft-merged-1.21.8-loom.mapp|NeoForge                      |neoforge                      |21.8.21             |Manifest: NOSIGNATURE
+	Crash Report UUID: a34719d2-f7f1-4b69-81cf-961d32a25c0f
+	FML: 9.0.16
+	NeoForge: 21.8.21
