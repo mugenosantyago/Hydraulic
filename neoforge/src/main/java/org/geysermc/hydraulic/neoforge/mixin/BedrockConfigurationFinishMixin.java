@@ -69,7 +69,7 @@ public class BedrockConfigurationFinishMixin {
                                 try {
                                     // Wait longer to let the natural configuration process attempt to complete
                                     // This gives time for Good Night's Sleep dimensions and other mod data to initialize
-                                    Thread.sleep(2000); // 2 second delay
+                                    Thread.sleep(5000); // 5 second delay to ensure all mods are fully initialized
                                     
                                     LOGGER.info("BedrockConfigurationFinishMixin: Fallback timer expired, calling returnToWorld for: {}", playerName);
                                     
