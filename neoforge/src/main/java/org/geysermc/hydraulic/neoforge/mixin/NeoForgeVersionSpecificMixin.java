@@ -53,28 +53,58 @@ public class NeoForgeVersionSpecificMixin {
                         LOGGER.info("NeoForgeVersionSpecificMixin: Preventing version-specific NeoForge disconnect for Bedrock player: {} (Message: {})", 
                             self.getOwner().getName(), disconnectMessage);
                         
-                        // Prevent the disconnect and trigger the configuration completion process
-                        LOGGER.info("NeoForgeVersionSpecificMixin: Disconnect prevented, triggering completion process for: {}", 
+                        // Prevent the disconnect and help complete configuration safely
+                        LOGGER.info("NeoForgeVersionSpecificMixin: Disconnect prevented, helping complete configuration for: {}", 
                             self.getOwner().getName());
                         
                         ci.cancel(); // Prevent the disconnect
                         
-                        // Try to trigger the configuration completion process without forcing returnToWorld
+                        // Try a safer approach - just clear remaining NeoForge tasks and trigger next task
                         if (self instanceof net.minecraft.server.network.ServerConfigurationPacketListenerImpl) {
                             net.minecraft.server.network.ServerConfigurationPacketListenerImpl configListener = 
                                 (net.minecraft.server.network.ServerConfigurationPacketListenerImpl) self;
                             
                             try {
-                                // Only trigger startNextTask to let ConfigurationCompletionMixin handle the rest
-                                java.lang.reflect.Method startNextTaskMethod = 
-                                    net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("startNextTask");
-                                startNextTaskMethod.setAccessible(true);
-                                startNextTaskMethod.invoke(configListener);
+                                // Clear any remaining NeoForge configuration tasks
+                                java.lang.reflect.Field tasksField = 
+                                    net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredField("configurationTasks");
+                                tasksField.setAccessible(true);
+                                @SuppressWarnings("unchecked")
+                                java.util.Queue<net.minecraft.server.network.ConfigurationTask> tasks = 
+                                    (java.util.Queue<net.minecraft.server.network.ConfigurationTask>) tasksField.get(configListener);
                                 
-                                LOGGER.info("NeoForgeVersionSpecificMixin: Triggered startNextTask for Bedrock player: {}", 
-                                    configListener.getOwner().getName());
+                                // Remove NeoForge tasks
+                                boolean removedTasks = tasks.removeIf(task -> {
+                                    String taskClassName = task.getClass().getName();
+                                    return taskClassName.contains("neoforge") || taskClassName.contains("SyncConfig");
+                                });
+                                
+                                if (removedTasks) {
+                                    LOGGER.info("NeoForgeVersionSpecificMixin: Removed NeoForge tasks for Bedrock player: {}", 
+                                        configListener.getOwner().getName());
+                                }
+                                
+                                // If no tasks remain, trigger startNextTask to complete configuration naturally
+                                if (tasks.isEmpty()) {
+                                    LOGGER.info("NeoForgeVersionSpecificMixin: No tasks remaining, triggering natural completion for: {}", 
+                                        configListener.getOwner().getName());
+                                    
+                                    // Trigger startNextTask to let the natural flow complete configuration
+                                    try {
+                                        java.lang.reflect.Method startNextTaskMethod = 
+                                            net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("startNextTask");
+                                        startNextTaskMethod.setAccessible(true);
+                                        startNextTaskMethod.invoke(configListener);
+                                        
+                                        LOGGER.info("NeoForgeVersionSpecificMixin: Triggered natural completion flow for: {}", 
+                                            configListener.getOwner().getName());
+                                    } catch (Exception startException) {
+                                        LOGGER.warn("NeoForgeVersionSpecificMixin: Could not trigger natural completion: {}", startException.getMessage());
+                                    }
+                                }
+                                
                             } catch (Exception e) {
-                                LOGGER.warn("NeoForgeVersionSpecificMixin: Could not trigger startNextTask for {}: {}", 
+                                LOGGER.warn("NeoForgeVersionSpecificMixin: Could not clear NeoForge tasks for {}: {}", 
                                     configListener.getOwner().getName(), e.getMessage());
                             }
                         }

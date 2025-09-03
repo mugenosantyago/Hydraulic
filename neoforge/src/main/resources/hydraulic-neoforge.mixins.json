@@ -21,8 +21,7 @@
     "IncompatibleClientMixin",
     "NetworkProtocolMixin",
     "PacketErrorHandlerMixin",
-    "NeoForgeVersionSpecificMixin",
-    "FinishConfigurationPacketMixin"
+    "NeoForgeVersionSpecificMixin"
   ],
   "injectors": {
     "defaultRequire": 0

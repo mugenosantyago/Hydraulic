@@ -77,22 +77,10 @@ public class ConfigurationCompletionMixin {
                                 }
                                 
                                 if (!finished) {
-                                    LOGGER.warn("ConfigurationCompletionMixin: Could not find finish method, trying returnToWorld as last resort");
+                                    LOGGER.warn("ConfigurationCompletionMixin: Could not find safe finish method, skipping returnToWorld to avoid protocol errors");
                                     
-                                    // Try returnToWorld as last resort, but with better error handling
-                                    try {
-                                        java.lang.reflect.Method returnToWorldMethod = 
-                                            ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("returnToWorld");
-                                        returnToWorldMethod.setAccessible(true);
-                                        returnToWorldMethod.invoke(self);
-                                        LOGGER.info("ConfigurationCompletionMixin: Successfully used returnToWorld as last resort for: {}", 
-                                            playerName);
-                                        finished = true;
-                                        ci.cancel();
-                                        return;
-                                    } catch (Exception returnException) {
-                                        LOGGER.warn("ConfigurationCompletionMixin: returnToWorld also failed: {}", returnException.getMessage());
-                                    }
+                                    // Don't use returnToWorld as it causes protocol pipeline errors
+                                    // Just let the natural flow handle it
                                     
                                     // List all methods to find the right one
                                     try {
