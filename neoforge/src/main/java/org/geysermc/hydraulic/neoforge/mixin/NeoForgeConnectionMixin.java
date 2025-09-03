@@ -32,7 +32,8 @@ public class NeoForgeConnectionMixin {
                 
                 // Check if this is the NeoForge version check disconnect message
                 if (disconnectMessage.contains("trying to connect to a server that is running NeoForge") ||
-                    disconnectMessage.contains("Please install NeoForge")) {
+                    disconnectMessage.contains("Please install NeoForge") ||
+                    disconnectMessage.contains("Please use NeoForge")) {
                     
                     Connection self = (Connection) (Object) this;
                     

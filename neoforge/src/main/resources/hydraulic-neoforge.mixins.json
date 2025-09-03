@@ -20,7 +20,8 @@
     "GoodNightsSleepMixin",
     "IncompatibleClientMixin",
     "NetworkProtocolMixin",
-    "PacketErrorHandlerMixin"
+    "PacketErrorHandlerMixin",
+    "NeoForgeVersionSpecificMixin"
   ],
   "injectors": {
     "defaultRequire": 0

@@ -38,7 +38,7 @@ public class IncompatibleClientMixin {
                 
                 // Check if this is the "Incompatible client" disconnect message
                 if (disconnectMessage.contains("Incompatible client") && 
-                    disconnectMessage.contains("Please use NeoForge")) {
+                    (disconnectMessage.contains("Please use NeoForge") || disconnectMessage.contains("Please install NeoForge"))) {
                     
                     String playerName = this.player.getGameProfile().getName();
                     boolean isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);

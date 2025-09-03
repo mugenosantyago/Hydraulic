@@ -36,7 +36,8 @@ public class NeoForgeVersionCheckMixin {
                 
                 // Check if this is the NeoForge version check disconnect message
                 if (disconnectMessage.contains("trying to connect to a server that is running NeoForge") ||
-                    disconnectMessage.contains("Please install NeoForge")) {
+                    disconnectMessage.contains("Please install NeoForge") ||
+                    disconnectMessage.contains("Please use NeoForge")) {
                     
                     boolean isBedrockPlayer = BedrockDetectionHelper.isBedrockPlayer(self);
                     

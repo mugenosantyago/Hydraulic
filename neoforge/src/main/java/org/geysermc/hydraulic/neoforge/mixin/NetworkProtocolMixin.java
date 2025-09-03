@@ -34,6 +34,7 @@ public class NetworkProtocolMixin {
                 // Check if this is any NeoForge version/compatibility check disconnect
                 if (disconnectMessage.contains("Incompatible client") || 
                     disconnectMessage.contains("Please use NeoForge") ||
+                    disconnectMessage.contains("Please install NeoForge") ||
                     disconnectMessage.contains("trying to connect to a server that is running NeoForge")) {
                     
                     Connection self = (Connection) (Object) this;

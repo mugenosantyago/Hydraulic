@@ -38,6 +38,7 @@ public class GlobalDisconnectMixin {
                 // ONLY prevent NeoForge-specific disconnect messages, allow all other disconnects
                 if (disconnectMessage.contains("trying to connect to a server that is running NeoForge") ||
                     disconnectMessage.contains("Please install NeoForge") ||
+                    disconnectMessage.contains("Please use NeoForge") ||
                     disconnectMessage.contains("Incompatible client")) {
                     
                     // Check if this is a Bedrock player using the player name (Floodgate naming convention)
