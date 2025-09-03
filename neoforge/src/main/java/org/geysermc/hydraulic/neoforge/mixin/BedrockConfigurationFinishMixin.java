@@ -113,7 +113,7 @@ public class BedrockConfigurationFinishMixin {
         method = "onDisconnect",
         at = @At("HEAD")
     )
-    private void cleanupHandledPlayer(net.minecraft.network.chat.Component reason, CallbackInfo ci) {
+    private void cleanupHandledPlayer(net.minecraft.network.DisconnectionDetails details, CallbackInfo ci) {
         try {
             ServerConfigurationPacketListenerImpl self = (ServerConfigurationPacketListenerImpl) (Object) this;
             
