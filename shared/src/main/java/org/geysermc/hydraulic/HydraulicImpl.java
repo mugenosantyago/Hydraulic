@@ -1,7 +1,7 @@
 package org.geysermc.hydraulic;
 
 import net.minecraft.server.MinecraftServer;
-import org.geysermc.geyser.api.event.EventRegistrar;
+// import org.geysermc.geyser.api.event.EventRegistrar; // Commented out to avoid ClassNotFoundException when Geyser is not available
 import org.geysermc.hydraulic.pack.PackManager;
 import org.geysermc.hydraulic.platform.HydraulicBootstrap;
 import org.geysermc.hydraulic.platform.HydraulicPlatform;
@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 /**
  * Main class of the Hydraulic mod.
  */
-public class HydraulicImpl implements EventRegistrar {
+public class HydraulicImpl { // Removed EventRegistrar implementation to avoid Geyser dependency issues
     private static final Logger LOGGER = LoggerFactory.getLogger(Constants.MOD_NAME);
 
     private static HydraulicImpl instance;

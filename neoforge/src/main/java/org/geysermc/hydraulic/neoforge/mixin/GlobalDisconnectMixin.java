@@ -35,9 +35,10 @@ public class GlobalDisconnectMixin {
             if (reason != null && this.player != null) {
                 String disconnectMessage = reason.getString();
                 
-                // Check if this is the NeoForge version check disconnect message
+                // ONLY prevent NeoForge-specific disconnect messages, allow all other disconnects
                 if (disconnectMessage.contains("trying to connect to a server that is running NeoForge") ||
-                    disconnectMessage.contains("Please install NeoForge")) {
+                    disconnectMessage.contains("Please install NeoForge") ||
+                    disconnectMessage.contains("Incompatible client")) {
                     
                     // Check if this is a Bedrock player using the player name (Floodgate naming convention)
                     String playerName = this.player.getGameProfile().getName();
@@ -48,6 +49,13 @@ public class GlobalDisconnectMixin {
                             playerName, disconnectMessage);
                         ci.cancel(); // Prevent the disconnect
                         return;
+                    }
+                } else {
+                    // For non-NeoForge disconnects, log but allow them to proceed
+                    String playerName = this.player.getGameProfile().getName();
+                    if (BedrockDetectionHelper.isFloodgatePlayer(playerName)) {
+                        LOGGER.debug("GlobalDisconnectMixin: Allowing legitimate disconnect for Bedrock player: {} (Message: {})", 
+                            playerName, disconnectMessage);
                     }
                 }
             }

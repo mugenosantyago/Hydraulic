@@ -10,7 +10,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import org.geysermc.event.Event;
-import org.geysermc.geyser.api.GeyserApi;
+// import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.hydraulic.Constants;
 import org.geysermc.hydraulic.HydraulicImpl;
 import org.geysermc.hydraulic.pack.context.PackEventContext;
@@ -141,10 +141,11 @@ public class PackManager {
         for (PackModule<?> module : ServiceLoader.load(PackModule.class)) {
             this.modules.add(module);
 
-            GeyserApi.api().eventBus().register(this.hydraulic, module);
-            module.eventListeners().forEach((eventClass, listeners) -> {
-                GeyserApi.api().eventBus().subscribe(this.hydraulic, eventClass, this::callEvents);
-            });
+            // TODO: Re-enable when Geyser is available
+            // GeyserApi.api().eventBus().register(this.hydraulic, module);
+            // module.eventListeners().forEach((eventClass, listeners) -> {
+            //     GeyserApi.api().eventBus().subscribe(this.hydraulic, eventClass, this::callEvents);
+            // });
 
             for (ModInfo mod : mods) {
                 if (IGNORED_MODS.contains(mod.id())) {
@@ -161,7 +162,8 @@ public class PackManager {
             }
         }
 
-        GeyserApi.api().eventBus().register(this.hydraulic, new PackListener(this.hydraulic, this));
+        // TODO: Re-enable when Geyser is available
+        // GeyserApi.api().eventBus().register(this.hydraulic, new PackListener(this.hydraulic, this));
     }
 
     /**
