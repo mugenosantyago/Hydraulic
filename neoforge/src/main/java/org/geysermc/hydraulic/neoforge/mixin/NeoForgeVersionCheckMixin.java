@@ -2,7 +2,6 @@ package org.geysermc.hydraulic.neoforge.mixin;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
-import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.hydraulic.neoforge.util.BedrockDetectionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

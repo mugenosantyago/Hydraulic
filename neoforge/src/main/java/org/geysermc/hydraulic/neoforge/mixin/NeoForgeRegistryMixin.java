@@ -2,7 +2,7 @@ package org.geysermc.hydraulic.neoforge.mixin;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
-import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.hydraulic.neoforge.util.BedrockDetectionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,13 +32,7 @@ public class NeoForgeRegistryMixin {
             ServerConfigurationPacketListenerImpl self = (ServerConfigurationPacketListenerImpl) (Object) this;
             
             if (self.getOwner() != null) {
-                boolean isBedrockPlayer = false;
-                try {
-                    isBedrockPlayer = GeyserApi.api() != null && GeyserApi.api().isBedrockPlayer(self.getOwner().getId());
-                } catch (Exception geyserException) {
-                    // If Geyser check fails, assume it's a Java player and continue normally
-                    return;
-                }
+                boolean isBedrockPlayer = BedrockDetectionHelper.isBedrockPlayer(self);
                 
                 if (isBedrockPlayer) {
                     // Get the current task type and check if it's a NeoForge task

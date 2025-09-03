@@ -3,7 +3,7 @@ package org.geysermc.hydraulic.neoforge.mixin;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.network.ConfigurationTask;
 import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
-import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.hydraulic.neoforge.util.BedrockDetectionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,7 +34,14 @@ public class ConfigSyncMixin {
             boolean isBedrockFromFloodgate = false;
             
             try {
-                isBedrockFromGeyser = GeyserApi.api().isBedrockPlayer(cookie.gameProfile().getId());
+                // Try Geyser API using reflection to avoid ClassNotFoundException
+                Class<?> geyserApiClass = Class.forName("org.geysermc.geyser.api.GeyserApi");
+                Object geyserApi = geyserApiClass.getMethod("api").invoke(null);
+                if (geyserApi != null) {
+                    Boolean result = (Boolean) geyserApiClass.getMethod("isBedrockPlayer", java.util.UUID.class)
+                        .invoke(geyserApi, cookie.gameProfile().getId());
+                    isBedrockFromGeyser = result != null && result;
+                }
             } catch (Exception geyserException) {
                 LOGGER.debug("ConfigSyncMixin: Geyser check failed: {}", geyserException.getMessage());
             }

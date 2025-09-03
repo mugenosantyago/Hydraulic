@@ -64,6 +64,27 @@ public class NeoForgeVersionSpecificMixin {
                             net.minecraft.server.network.ServerConfigurationPacketListenerImpl configListener = 
                                 (net.minecraft.server.network.ServerConfigurationPacketListenerImpl) self;
                             
+                            // Check task queue state before triggering continuation
+                            try {
+                                java.lang.reflect.Field tasksField = net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredField("configurationTasks");
+                                tasksField.setAccessible(true);
+                                @SuppressWarnings("unchecked")
+                                java.util.Queue<net.minecraft.server.network.ConfigurationTask> tasks = 
+                                    (java.util.Queue<net.minecraft.server.network.ConfigurationTask>) tasksField.get(configListener);
+                                
+                                LOGGER.info("NeoForgeVersionSpecificMixin: Configuration state for {}: {} tasks remaining", 
+                                    configListener.getOwner().getName(), tasks.size());
+                                
+                                if (!tasks.isEmpty()) {
+                                    // Log remaining tasks
+                                    for (net.minecraft.server.network.ConfigurationTask task : tasks) {
+                                        LOGGER.info("NeoForgeVersionSpecificMixin: Remaining task: {}", task.getClass().getName());
+                                    }
+                                }
+                            } catch (Exception taskException) {
+                                LOGGER.debug("NeoForgeVersionSpecificMixin: Could not check task queue: {}", taskException.getMessage());
+                            }
+                            
                             // Just trigger startNextTask once to continue the flow
                             try {
                                 java.lang.reflect.Method startNextTaskMethod = 
@@ -71,8 +92,30 @@ public class NeoForgeVersionSpecificMixin {
                                 startNextTaskMethod.setAccessible(true);
                                 startNextTaskMethod.invoke(configListener);
                                 
-                                LOGGER.info("NeoForgeVersionSpecificMixin: Triggered configuration continuation for: {}", 
+                                LOGGER.info("NeoForgeVersionSpecificMixin: Triggered configuration continuation for: {} - awaiting completion", 
                                     configListener.getOwner().getName());
+                                
+                                // Schedule a follow-up check to see if configuration completed
+                                java.util.concurrent.Executors.newSingleThreadScheduledExecutor().schedule(() -> {
+                                    try {
+                                        java.lang.reflect.Field tasksField = net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredField("configurationTasks");
+                                        tasksField.setAccessible(true);
+                                        @SuppressWarnings("unchecked")
+                                        java.util.Queue<net.minecraft.server.network.ConfigurationTask> tasks = 
+                                            (java.util.Queue<net.minecraft.server.network.ConfigurationTask>) tasksField.get(configListener);
+                                        
+                                        if (tasks.isEmpty()) {
+                                            LOGGER.info("NeoForgeVersionSpecificMixin: Configuration appears complete for: {}", 
+                                                configListener.getOwner().getName());
+                                        } else {
+                                            LOGGER.warn("NeoForgeVersionSpecificMixin: Configuration may be stuck for: {} ({} tasks remaining)", 
+                                                configListener.getOwner().getName(), tasks.size());
+                                        }
+                                    } catch (Exception checkException) {
+                                        LOGGER.debug("NeoForgeVersionSpecificMixin: Could not check completion status: {}", checkException.getMessage());
+                                    }
+                                }, 5, java.util.concurrent.TimeUnit.SECONDS);
+                                
                             } catch (Exception e) {
                                 LOGGER.warn("NeoForgeVersionSpecificMixin: Could not trigger continuation: {}", e.getMessage());
                             }
