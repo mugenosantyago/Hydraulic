@@ -126,54 +126,15 @@ public class ConfigurationTimeoutMixin {
                 LOGGER.debug("ConfigurationTimeoutMixin: Could not clear tasks: {}", taskException.getMessage());
             }
 
-            // Try multiple methods to complete configuration
-            boolean completed = false;
-
-            // Method 1: Try finishConfiguration
-            if (!completed) {
-                try {
-                    java.lang.reflect.Method finishMethod = 
-                        ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
-                    finishMethod.setAccessible(true);
-                    finishMethod.invoke(listener);
-                    LOGGER.info("ConfigurationTimeoutMixin: Successfully forced completion via finishConfiguration for: {}", playerName);
-                    completed = true;
-                } catch (Exception e) {
-                    LOGGER.debug("ConfigurationTimeoutMixin: finishConfiguration failed: {}", e.getMessage());
-                }
-            }
-
-            // Method 2: Try handleConfigurationFinished
-            if (!completed) {
-                try {
-                    java.lang.reflect.Method handleFinishedMethod = 
-                        ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("handleConfigurationFinished", 
-                            net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket.class);
-                    handleFinishedMethod.setAccessible(true);
-                    handleFinishedMethod.invoke(listener, (Object) null);
-                    LOGGER.info("ConfigurationTimeoutMixin: Successfully forced completion via handleConfigurationFinished for: {}", playerName);
-                    completed = true;
-                } catch (Exception e) {
-                    LOGGER.debug("ConfigurationTimeoutMixin: handleConfigurationFinished failed: {}", e.getMessage());
-                }
-            }
-
-            // Method 3: Try startNextTask (which should complete if no tasks remain)
-            if (!completed) {
-                try {
-                    java.lang.reflect.Method startNextTaskMethod = 
-                        ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("startNextTask");
-                    startNextTaskMethod.setAccessible(true);
-                    startNextTaskMethod.invoke(listener);
-                    LOGGER.info("ConfigurationTimeoutMixin: Successfully triggered startNextTask for: {}", playerName);
-                    completed = true;
-                } catch (Exception e) {
-                    LOGGER.debug("ConfigurationTimeoutMixin: startNextTask failed: {}", e.getMessage());
-                }
-            }
-
-            if (!completed) {
-                LOGGER.error("ConfigurationTimeoutMixin: All completion methods failed for stuck Bedrock player: {}", playerName);
+            // Simply trigger startNextTask which should complete if no tasks remain
+            try {
+                java.lang.reflect.Method startNextTaskMethod = 
+                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("startNextTask");
+                startNextTaskMethod.setAccessible(true);
+                startNextTaskMethod.invoke(listener);
+                LOGGER.info("ConfigurationTimeoutMixin: Successfully triggered startNextTask for stuck player: {}", playerName);
+            } catch (Exception e) {
+                LOGGER.warn("ConfigurationTimeoutMixin: Could not trigger startNextTask for stuck player {}: {}", playerName, e.getMessage());
             }
 
         } catch (Exception e) {

@@ -50,38 +50,9 @@ public class ConfigurationCompletionMixin {
                             LOGGER.info("ConfigurationCompletionMixin: No tasks remaining for Bedrock player {}, forcing configuration completion", 
                                 playerName);
                             
-                            // Try to force configuration completion using finishConfiguration method
-                            try {
-                                java.lang.reflect.Method finishMethod = 
-                                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
-                                finishMethod.setAccessible(true);
-                                finishMethod.invoke(self);
-                                LOGGER.info("ConfigurationCompletionMixin: Successfully forced configuration completion for Bedrock player: {}", playerName);
-                                ci.cancel(); // Prevent the original startNextTask from running
-                                return;
-                            } catch (Exception finishException) {
-                                LOGGER.info("ConfigurationCompletionMixin: finishConfiguration failed, trying alternative: {}", finishException.getMessage());
-                                
-                                // Alternative: Try to simulate receiving a finish configuration packet
-                                try {
-                                    java.lang.reflect.Method handleFinishedMethod = 
-                                        ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("handleConfigurationFinished", 
-                                            net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket.class);
-                                    handleFinishedMethod.setAccessible(true);
-                                    
-                                    // Create a mock finish configuration packet or use null
-                                    handleFinishedMethod.invoke(self, (Object) null);
-                                    LOGGER.info("ConfigurationCompletionMixin: Successfully completed via handleConfigurationFinished for Bedrock player: {}", playerName);
-                                    ci.cancel();
-                                    return;
-                                } catch (Exception handleException) {
-                                    LOGGER.warn("ConfigurationCompletionMixin: All completion methods failed for Bedrock player {}: {}", 
-                                        playerName, handleException.getMessage());
-                                }
-                            }
-                            
-                            // If all else fails, let the natural flow continue
-                            LOGGER.info("ConfigurationCompletionMixin: Falling back to natural flow for Bedrock player: {}", playerName);
+                            // For Bedrock players with no tasks, let the natural startNextTask proceed
+                            // This should trigger the normal completion flow since there are no tasks left
+                            LOGGER.info("ConfigurationCompletionMixin: No tasks remaining, allowing natural completion flow for Bedrock player: {}", playerName);
                             return;
                         } else {
                             // Check if remaining tasks are NeoForge tasks that should be skipped

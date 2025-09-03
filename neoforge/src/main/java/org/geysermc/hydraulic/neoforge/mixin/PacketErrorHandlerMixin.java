@@ -46,14 +46,17 @@ public class PacketErrorHandlerMixin {
             }
             
             if (isBedrockPlayer) {
-                // Check if the exception is related to custom packets that Bedrock clients can't handle
-                String errorMessage = exception.getMessage();
-                if (errorMessage != null && (errorMessage.contains("may not be sent to the client") || 
+                // Check if the packet is null or the exception is related to custom packets that Bedrock clients can't handle
+                String errorMessage = exception != null ? exception.getMessage() : "null";
+                
+                if (packet == null || 
+                    (errorMessage != null && (errorMessage.contains("may not be sent to the client") || 
                                             errorMessage.contains("UnsupportedOperationException") ||
-                                            errorMessage.contains("Payload"))) {
+                                            errorMessage.contains("Payload") ||
+                                            errorMessage.contains("null")))) {
                     
-                    LOGGER.info("PacketErrorHandlerMixin: Preventing packet error disconnect for Bedrock player: {} (Error: {})", 
-                        playerName, errorMessage);
+                    LOGGER.debug("PacketErrorHandlerMixin: Preventing packet error for Bedrock player: {} (Packet: {}, Error: {})", 
+                        playerName, packet != null ? packet.getClass().getSimpleName() : "null", errorMessage);
                     ci.cancel(); // Don't let the packet error cause a disconnect
                     return;
                 }
