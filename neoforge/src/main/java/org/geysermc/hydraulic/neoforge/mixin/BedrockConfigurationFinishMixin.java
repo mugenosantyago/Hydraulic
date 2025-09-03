@@ -63,69 +63,36 @@ public class BedrockConfigurationFinishMixin {
                             // Cancel the original startNextTask since we have no tasks
                             ci.cancel();
                             
-                            // Try a simpler approach - just send the finish configuration packet to the client
-                            // and let Geyser handle the response
+                            // Use the returnToWorld method - this is what the returntoworld command does!
+                            LOGGER.info("BedrockConfigurationFinishMixin: Starting returnToWorld completion for: {}", playerName);
+                            
                             try {
-                                // Get the connection field from the parent class
-                                java.lang.reflect.Field connectionField = null;
-                                Class<?> currentClass = self.getClass();
-                                while (currentClass != null && connectionField == null) {
-                                    try {
-                                        connectionField = currentClass.getDeclaredField("connection");
-                                        break;
-                                    } catch (NoSuchFieldException e) {
-                                        currentClass = currentClass.getSuperclass();
-                                    }
-                                }
+                                // Try to call returnToWorld method directly
+                                java.lang.reflect.Method returnToWorldMethod = 
+                                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("returnToWorld");
+                                returnToWorldMethod.setAccessible(true);
+                                returnToWorldMethod.invoke(self);
                                 
-                                if (connectionField != null) {
-                                    connectionField.setAccessible(true);
-                                    Object connection = connectionField.get(self);
+                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully called returnToWorld for: {}", playerName);
+                                return;
+                                
+                            } catch (Exception returnException) {
+                                LOGGER.error("BedrockConfigurationFinishMixin: returnToWorld failed for {}: {}", 
+                                    playerName, returnException.getMessage());
+                                
+                                // Fallback: Try finishConfiguration as backup
+                                try {
+                                    java.lang.reflect.Method finishMethod = 
+                                        ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
+                                    finishMethod.setAccessible(true);
+                                    finishMethod.invoke(self);
                                     
-                                    // Send the ClientboundFinishConfigurationPacket to tell the client to finish
-                                    try {
-                                        Class<?> clientFinishPacketClass = Class.forName("net.minecraft.network.protocol.configuration.ClientboundFinishConfigurationPacket");
-                                        Object clientFinishPacket = clientFinishPacketClass.getDeclaredConstructor().newInstance();
-                                        
-                                        java.lang.reflect.Method sendMethod = connection.getClass().getDeclaredMethod("send", 
-                                            Class.forName("net.minecraft.network.protocol.Packet"));
-                                        sendMethod.setAccessible(true);
-                                        sendMethod.invoke(connection, clientFinishPacket);
-                                        
-                                        LOGGER.info("BedrockConfigurationFinishMixin: Sent ClientboundFinishConfigurationPacket to client for: {}", playerName);
-                                        
-                                        // Now wait a bit and then try to complete the handshake by calling finishConfiguration directly
-                                        // Schedule this to run after a short delay to allow the packet to be processed
-                                        java.util.concurrent.CompletableFuture.runAsync(() -> {
-                                            try {
-                                                Thread.sleep(50); // Small delay
-                                                
-                                                // Try to call finishConfiguration directly
-                                                java.lang.reflect.Method finishMethod = 
-                                                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
-                                                finishMethod.setAccessible(true);
-                                                finishMethod.invoke(self);
-                                                
-                                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully called finishConfiguration for: {}", playerName);
-                                                
-                                            } catch (Exception delayedException) {
-                                                LOGGER.debug("BedrockConfigurationFinishMixin: Delayed finishConfiguration failed for {}: {}", 
-                                                    playerName, delayedException.getMessage());
-                                            }
-                                        });
-                                        
-                                        return;
-                                        
-                                    } catch (Exception packetException) {
-                                        LOGGER.debug("BedrockConfigurationFinishMixin: Failed to send finish packet: {}", packetException.getMessage());
-                                    }
-                                } else {
-                                    LOGGER.debug("BedrockConfigurationFinishMixin: Could not find connection field");
+                                    LOGGER.info("BedrockConfigurationFinishMixin: Fallback finishConfiguration succeeded for: {}", playerName);
+                                    
+                                } catch (Exception finishException) {
+                                    LOGGER.error("BedrockConfigurationFinishMixin: All completion methods failed for {}: {}", 
+                                        playerName, finishException.getMessage());
                                 }
-                                
-                            } catch (Exception e) {
-                                LOGGER.error("BedrockConfigurationFinishMixin: Failed to complete configuration for {}: {}", 
-                                    playerName, e.getMessage());
                             }
                         }
                     } catch (Exception reflectionException) {
