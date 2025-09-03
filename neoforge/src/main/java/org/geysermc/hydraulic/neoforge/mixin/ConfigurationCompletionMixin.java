@@ -51,9 +51,10 @@ public class ConfigurationCompletionMixin {
                             
                             // Try to finish the configuration since no tasks are left
                             try {
-                                // Try multiple method names for finishing configuration (try runConfiguration first)
+                                // Try multiple method names for finishing configuration (try returnToWorld after runConfiguration clears tasks)
                                 String[] finishMethodNames = {
-                                    "runConfiguration", // Found in debug output - might handle completion
+                                    "returnToWorld", // This actually transitions to game, but only after tasks are cleared
+                                    "runConfiguration", // This clears/processes configuration
                                     "finishConfiguration",
                                     "m_294354_", // Common obfuscated name
                                     "completeConfiguration",
@@ -158,9 +159,10 @@ public class ConfigurationCompletionMixin {
                                     LOGGER.info("ConfigurationCompletionMixin: All NeoForge tasks removed, finishing configuration for Bedrock player: {}", 
                                         self.getOwner().getName());
                                     
-                                    // Try multiple method names for finishing configuration (try runConfiguration first)
+                                    // Try multiple method names for finishing configuration (try returnToWorld after tasks are cleared)
                                     String[] finishMethodNames = {
-                                        "runConfiguration", // Found in debug output - might handle completion
+                                        "returnToWorld", // This actually transitions to game, but only after tasks are cleared
+                                        "runConfiguration", // This clears/processes configuration
                                         "finishConfiguration",
                                         "m_294354_", // Common obfuscated name
                                         "completeConfiguration",
