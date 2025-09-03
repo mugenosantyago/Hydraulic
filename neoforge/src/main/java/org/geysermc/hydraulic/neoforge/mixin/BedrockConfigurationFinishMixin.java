@@ -60,41 +60,60 @@ public class BedrockConfigurationFinishMixin {
                             // Mark this player as handled to prevent duplicate processing
                             handledPlayers.add(playerName);
                             
-                            // Cancel the original startNextTask to prevent loops
-                            ci.cancel();
-                            
-                            // Create a proper ServerboundFinishConfigurationPacket instance
+                            // Try to force completion by calling the transition method directly
                             try {
-                                Class<?> packetClass = Class.forName("net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket");
-                                Object finishPacket = packetClass.getDeclaredConstructor().newInstance();
-                                
-                                java.lang.reflect.Method handleFinishMethod = 
-                                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("handleConfigurationFinished", packetClass);
-                                handleFinishMethod.setAccessible(true);
-                                handleFinishMethod.invoke(self, finishPacket);
-                                
-                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully called handleConfigurationFinished with proper packet for: {}", 
-                                    playerName);
-                                
-                            } catch (Exception packetException) {
-                                LOGGER.debug("BedrockConfigurationFinishMixin: Failed to create proper finish packet: {}", packetException.getMessage());
-                                
-                                // Fallback: Try to transition directly using finishConfiguration method
-                                try {
-                                    java.lang.reflect.Method finishConfigMethod = 
-                                        ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
-                                    finishConfigMethod.setAccessible(true);
-                                    finishConfigMethod.invoke(self);
-                                    
-                                    LOGGER.info("BedrockConfigurationFinishMixin: Successfully called finishConfiguration for: {}", playerName);
-                                    
-                                } catch (Exception finishException) {
-                                    LOGGER.error("BedrockConfigurationFinishMixin: All completion methods failed for {}: {}", 
-                                        playerName, finishException.getMessage());
+                                // Look for a method that transitions to play phase
+                                java.lang.reflect.Method[] methods = ServerConfigurationPacketListenerImpl.class.getDeclaredMethods();
+                                for (java.lang.reflect.Method method : methods) {
+                                    // Look for methods that might transition to play phase
+                                    if (method.getName().contains("switchToMain") || 
+                                        method.getName().contains("switchToPlay") ||
+                                        method.getName().contains("transitionTo") ||
+                                        method.getName().equals("finishCurrentTask")) {
+                                        
+                                        if (method.getParameterCount() == 0) {
+                                            method.setAccessible(true);
+                                            method.invoke(self);
+                                            LOGGER.info("BedrockConfigurationFinishMixin: Successfully called {} for: {}", 
+                                                method.getName(), playerName);
+                                            ci.cancel();
+                                            return;
+                                        }
+                                    }
                                 }
+                                
+                                // If no transition method found, try to send the client finish configuration packet
+                                try {
+                                    // Get the connection and send the finish configuration packet to the client
+                                    java.lang.reflect.Method getConnectionMethod = 
+                                        net.minecraft.server.network.ServerCommonPacketListenerImpl.class.getDeclaredMethod("getConnection");
+                                    getConnectionMethod.setAccessible(true);
+                                    Object connection = getConnectionMethod.invoke(self);
+                                    
+                                    // Create and send the ClientboundFinishConfigurationPacket
+                                    Class<?> clientFinishPacketClass = Class.forName("net.minecraft.network.protocol.configuration.ClientboundFinishConfigurationPacket");
+                                    Object clientFinishPacket = clientFinishPacketClass.getDeclaredConstructor().newInstance();
+                                    
+                                    java.lang.reflect.Method sendMethod = connection.getClass().getDeclaredMethod("send", 
+                                        Class.forName("net.minecraft.network.protocol.Packet"));
+                                    sendMethod.setAccessible(true);
+                                    sendMethod.invoke(connection, clientFinishPacket);
+                                    
+                                    LOGGER.info("BedrockConfigurationFinishMixin: Sent ClientboundFinishConfigurationPacket to Bedrock player: {}", playerName);
+                                    ci.cancel();
+                                    return;
+                                    
+                                } catch (Exception sendException) {
+                                    LOGGER.debug("BedrockConfigurationFinishMixin: Failed to send finish packet: {}", sendException.getMessage());
+                                }
+                                
+                                // Final fallback: just let the natural flow continue without canceling
+                                LOGGER.info("BedrockConfigurationFinishMixin: Allowing natural completion flow for Bedrock player: {}", playerName);
+                                
+                            } catch (Exception completionException) {
+                                LOGGER.error("BedrockConfigurationFinishMixin: Exception during completion attempt for {}: {}", 
+                                    playerName, completionException.getMessage());
                             }
-                            
-                            return;
                         }
                     } catch (Exception reflectionException) {
                         LOGGER.debug("BedrockConfigurationFinishMixin: Could not access task queue: {}", reflectionException.getMessage());
