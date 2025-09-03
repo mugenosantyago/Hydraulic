@@ -10,12 +10,12 @@
     "NeoForgeHandshakeMixin",
     "NetworkRegistrationMixin",
     "NeoForgeVersionCheckMixin",
-    "ConnectionTransitionMixin",
+
     "NeoForgeConnectionMixin",
     "GlobalDisconnectMixin",
     "ServerCommonPacketListenerMixin",
     "ConfigurationCompletionMixin",
-    "ConfigurationTimeoutMixin",
+
     "CustomPacketMixin",
     "GoodNightsSleepMixin",
     "IncompatibleClientMixin",

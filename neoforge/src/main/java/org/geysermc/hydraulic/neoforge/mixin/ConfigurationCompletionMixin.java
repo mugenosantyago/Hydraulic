@@ -46,31 +46,13 @@ public class ConfigurationCompletionMixin {
                             (java.util.Queue<net.minecraft.server.network.ConfigurationTask>) tasksField.get(self);
                         
                         if (tasks.isEmpty()) {
-                            // For Bedrock players with no tasks, try to simulate finish configuration
-                            LOGGER.info("ConfigurationCompletionMixin: No tasks remaining for Bedrock player {}, attempting to complete configuration", 
+                            // For Bedrock players with no tasks remaining, we need to ensure proper completion
+                            LOGGER.info("ConfigurationCompletionMixin: No tasks remaining for Bedrock player {}, ensuring completion", 
                                 playerName);
                             
-                            // Try to simulate the client sending a finish configuration packet
-                            try {
-                                // Create a mock finish configuration packet
-                                Class<?> finishPacketClass = Class.forName("net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket");
-                                Object finishPacket = finishPacketClass.getDeclaredConstructor().newInstance();
-                                
-                                // Try to handle it directly
-                                java.lang.reflect.Method handleFinishMethod = 
-                                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("handleConfigurationFinished", finishPacketClass);
-                                handleFinishMethod.setAccessible(true);
-                                handleFinishMethod.invoke(self, finishPacket);
-                                
-                                LOGGER.info("ConfigurationCompletionMixin: Successfully simulated finish configuration for Bedrock player: {}", playerName);
-                                ci.cancel(); // Only cancel if we successfully completed
-                                return;
-                            } catch (Exception finishException) {
-                                LOGGER.debug("ConfigurationCompletionMixin: Could not simulate finish configuration: {}", finishException.getMessage());
-                                // If simulation fails, let the natural flow proceed
-                                LOGGER.info("ConfigurationCompletionMixin: Allowing natural startNextTask flow for Bedrock player: {}", playerName);
-                            }
-                            
+                            // Don't cancel - let the original startNextTask run
+                            // When there are no tasks, it should naturally complete the configuration
+                            // and transition to play phase
                             return;
                         } else {
                             // Check if remaining tasks are NeoForge tasks that should be skipped
