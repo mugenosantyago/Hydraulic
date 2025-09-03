@@ -1,8 +1,7 @@
 package org.geysermc.hydraulic.neoforge.mixin;
 
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.ServerCommonPacketListenerImpl;
+import net.minecraft.network.protocol.common.ServerCommonPacketListener;
 import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
 import org.geysermc.geyser.api.GeyserApi;
 import org.slf4j.Logger;
@@ -65,21 +64,21 @@ public class NetworkRegistrationMixin {
         remap = false,
         require = 0
     )
-    private static void relaxPacketValidation(Object payload, CallbackInfo ci) {
+    private static void relaxPacketValidation(Packet<?> packet, ServerCommonPacketListener listener, CallbackInfo ci) {
         try {
-            if (payload != null) {
-                String payloadString = payload.toString();
+            if (packet != null) {
+                String packetString = packet.toString();
                 
                 // Skip validation for known problematic mod packets
-                if (payloadString.contains("wormhole:") || 
-                    payloadString.contains("glitchcore:") ||
-                    payloadString.contains("dcintegration:") ||
-                    payloadString.contains("gun_core:") ||
-                    payloadString.contains("modern_guns:") ||
-                    payloadString.contains("supermartijn642") ||
-                    payloadString.contains("CustomPayload")) {
+                if (packetString.contains("wormhole:") || 
+                    packetString.contains("glitchcore:") ||
+                    packetString.contains("dcintegration:") ||
+                    packetString.contains("gun_core:") ||
+                    packetString.contains("modern_guns:") ||
+                    packetString.contains("supermartijn642") ||
+                    packetString.contains("CustomPayload")) {
                     
-                    LOGGER.debug("NetworkRegistrationMixin: Relaxing validation for mod packet: {}", payloadString);
+                    LOGGER.debug("NetworkRegistrationMixin: Relaxing validation for mod packet: {}", packetString);
                     ci.cancel(); // Skip the strict validation that causes disconnections
                     return;
                 }
