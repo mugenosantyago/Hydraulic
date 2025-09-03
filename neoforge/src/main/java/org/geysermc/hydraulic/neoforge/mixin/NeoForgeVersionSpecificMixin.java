@@ -53,12 +53,35 @@ public class NeoForgeVersionSpecificMixin {
                         LOGGER.info("NeoForgeVersionSpecificMixin: Preventing version-specific NeoForge disconnect for Bedrock player: {} (Message: {})", 
                             self.getOwner().getName(), disconnectMessage);
                         
-                        // Don't try to finish configuration here - let ConfigurationCompletionMixin handle it
-                        // This prevents conflicts and ensures proper timing
-                        LOGGER.info("NeoForgeVersionSpecificMixin: Disconnect prevented, letting ConfigurationCompletionMixin handle completion for: {}", 
+                        // After preventing the disconnect, manually trigger configuration completion
+                        LOGGER.info("NeoForgeVersionSpecificMixin: Disconnect prevented, now triggering configuration completion for: {}", 
                             self.getOwner().getName());
                         
                         ci.cancel(); // Prevent the disconnect
+                        
+                        // Try to manually complete the configuration since we prevented the disconnect
+                        if (self instanceof net.minecraft.server.network.ServerConfigurationPacketListenerImpl) {
+                            net.minecraft.server.network.ServerConfigurationPacketListenerImpl configListener = 
+                                (net.minecraft.server.network.ServerConfigurationPacketListenerImpl) self;
+                            
+                            // Try to complete configuration immediately
+                            try {
+                                LOGGER.info("NeoForgeVersionSpecificMixin: Attempting to complete configuration for: {}", 
+                                    configListener.getOwner().getName());
+                                
+                                java.lang.reflect.Method finishConfigMethod = 
+                                    net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
+                                finishConfigMethod.setAccessible(true);
+                                finishConfigMethod.invoke(configListener);
+                                
+                                LOGGER.info("NeoForgeVersionSpecificMixin: Successfully completed configuration for Bedrock player: {}", 
+                                    configListener.getOwner().getName());
+                            } catch (Exception e) {
+                                LOGGER.warn("NeoForgeVersionSpecificMixin: Failed to complete configuration for {}: {}", 
+                                    configListener.getOwner().getName(), e.getMessage());
+                            }
+                        }
+                        
                         return;
                     }
                 }

@@ -32,6 +32,9 @@ public class ConfigurationCompletionMixin {
             if (self.getOwner() != null) {
                 boolean isBedrockPlayer = BedrockDetectionHelper.isBedrockPlayer(self);
                 
+                LOGGER.info("ConfigurationCompletionMixin: startNextTask called for player {} (Bedrock: {})", 
+                    self.getOwner().getName(), isBedrockPlayer);
+                
                 if (isBedrockPlayer) {
                     try {
                         // Check if there are any tasks left in the queue
