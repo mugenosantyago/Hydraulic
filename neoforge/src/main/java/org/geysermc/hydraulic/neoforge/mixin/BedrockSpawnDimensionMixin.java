@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * This mixin ensures Bedrock players are created in the overworld dimension
@@ -25,7 +25,7 @@ public class BedrockSpawnDimensionMixin {
         method = "placeNewPlayer",
         at = @At("HEAD")
     )
-    private void ensureOverworldForBedrock(net.minecraft.network.Connection connection, ServerPlayer player, net.minecraft.server.network.CommonListenerCookie cookie, CallbackInfoReturnable<ServerPlayer> cir) {
+    private void ensureOverworldForBedrock(net.minecraft.network.Connection connection, ServerPlayer player, net.minecraft.server.network.CommonListenerCookie cookie, CallbackInfo ci) {
         try {
             if (player != null && player.getGameProfile() != null) {
                 String playerName = player.getGameProfile().getName();
