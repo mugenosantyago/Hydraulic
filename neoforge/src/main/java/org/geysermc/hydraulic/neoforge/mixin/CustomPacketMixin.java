@@ -67,8 +67,7 @@ public class CustomPacketMixin {
                 
                 // Check for other problematic packets by string name (also cause pipeline errors for Bedrock players)
                 if (packetType.contains("UpdateEnabledFeaturesPacket") || 
-                    packetType.contains("SelectKnownPacks") || 
-                    packetType.contains("FinishConfigurationPacket")) {
+                    packetType.contains("SelectKnownPacks")) {
                     boolean isBedrockPlayer = false;
                     String playerName = null;
                     
