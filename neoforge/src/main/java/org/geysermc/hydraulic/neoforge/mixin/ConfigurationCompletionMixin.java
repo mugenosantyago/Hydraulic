@@ -46,12 +46,12 @@ public class ConfigurationCompletionMixin {
                             (java.util.Queue<net.minecraft.server.network.ConfigurationTask>) tasksField.get(self);
                         
                         if (tasks.isEmpty()) {
-                            // For Bedrock players with no tasks, just let them proceed naturally
-                            // Don't try to force completion as it causes packet issues
-                            LOGGER.info("ConfigurationCompletionMixin: No tasks remaining for Bedrock player {}, allowing natural progression", 
+                            // For Bedrock players with no tasks, let the system proceed naturally
+                            LOGGER.info("ConfigurationCompletionMixin: No tasks remaining for Bedrock player {}, proceeding naturally", 
                                 playerName);
                             
-                            // Don't cancel - let the natural flow proceed
+                            // Don't cancel - let the natural startNextTask flow proceed
+                            // This should trigger the normal completion since there are no tasks left
                             return;
                         } else {
                             // Check if remaining tasks are NeoForge tasks that should be skipped
