@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * This mixin specifically helps Bedrock players complete the configuration phase
  * by ensuring all necessary steps are completed after NeoForge tasks are bypassed.
  */
-@Mixin(value = ServerConfigurationPacketListenerImpl.class)
+@Mixin(value = ServerConfigurationPacketListenerImpl.class, priority = 1000)
 public class ConfigurationCompletionMixin {
     private static final Logger LOGGER = LoggerFactory.getLogger("ConfigurationCompletionMixin");
 
@@ -46,13 +46,11 @@ public class ConfigurationCompletionMixin {
                             (java.util.Queue<net.minecraft.server.network.ConfigurationTask>) tasksField.get(self);
                         
                         if (tasks.isEmpty()) {
-                            // For Bedrock players with no tasks remaining, we need to ensure proper completion
-                            LOGGER.info("ConfigurationCompletionMixin: No tasks remaining for Bedrock player {}, ensuring completion", 
+                            // For Bedrock players with no tasks remaining, let BedrockConfigurationFinishMixin handle completion
+                            LOGGER.info("ConfigurationCompletionMixin: No tasks remaining for Bedrock player {}, letting BedrockConfigurationFinishMixin handle completion", 
                                 playerName);
                             
-                            // Don't cancel - let the original startNextTask run
-                            // When there are no tasks, it should naturally complete the configuration
-                            // and transition to play phase
+                            // Don't cancel - let the BedrockConfigurationFinishMixin (higher priority) handle this
                             return;
                         } else {
                             // Check if remaining tasks are NeoForge tasks that should be skipped

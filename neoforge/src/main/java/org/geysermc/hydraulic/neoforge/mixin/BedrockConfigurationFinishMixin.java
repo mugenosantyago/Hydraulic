@@ -13,9 +13,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * This mixin ensures Bedrock players properly finish configuration by
  * sending the required finish configuration packet on their behalf.
  */
-@Mixin(value = ServerConfigurationPacketListenerImpl.class)
+@Mixin(value = ServerConfigurationPacketListenerImpl.class, priority = 1500)
 public class BedrockConfigurationFinishMixin {
     private static final Logger LOGGER = LoggerFactory.getLogger("BedrockConfigurationFinishMixin");
+    
+    // Track which players we've already handled to prevent duplicate processing
+    private static final java.util.Set<String> handledPlayers = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     /**
      * When startNextTask is called and there are no tasks for Bedrock players,
@@ -36,6 +39,12 @@ public class BedrockConfigurationFinishMixin {
                 if (isBedrockPlayer) {
                     String playerName = self.getOwner().getName();
                     
+                    // Check if we've already handled this player to prevent duplicate processing
+                    if (handledPlayers.contains(playerName)) {
+                        LOGGER.debug("BedrockConfigurationFinishMixin: Already handled configuration for {}, skipping", playerName);
+                        return;
+                    }
+                    
                     // Check if there are any tasks left
                     try {
                         java.lang.reflect.Field tasksField = ServerConfigurationPacketListenerImpl.class.getDeclaredField("configurationTasks");
@@ -48,45 +57,40 @@ public class BedrockConfigurationFinishMixin {
                             LOGGER.info("BedrockConfigurationFinishMixin: No tasks remaining for Bedrock player {}, sending finish configuration", 
                                 playerName);
                             
+                            // Mark this player as handled to prevent duplicate processing
+                            handledPlayers.add(playerName);
+                            
                             // Cancel the original startNextTask to prevent loops
                             ci.cancel();
                             
-                            // Try to directly call handleConfigurationFinished with null (some methods accept null)
+                            // Create a proper ServerboundFinishConfigurationPacket instance
                             try {
-                                java.lang.reflect.Method handleFinishMethod = 
-                                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("handleConfigurationFinished", 
-                                        Class.forName("net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket"));
-                                handleFinishMethod.setAccessible(true);
-                                handleFinishMethod.invoke(self, (Object) null);
+                                Class<?> packetClass = Class.forName("net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket");
+                                Object finishPacket = packetClass.getDeclaredConstructor().newInstance();
                                 
-                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully called handleConfigurationFinished with null for: {}", 
+                                java.lang.reflect.Method handleFinishMethod = 
+                                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("handleConfigurationFinished", packetClass);
+                                handleFinishMethod.setAccessible(true);
+                                handleFinishMethod.invoke(self, finishPacket);
+                                
+                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully called handleConfigurationFinished with proper packet for: {}", 
                                     playerName);
                                 
-                            } catch (Exception directException) {
-                                LOGGER.debug("BedrockConfigurationFinishMixin: handleConfigurationFinished with null failed: {}", directException.getMessage());
+                            } catch (Exception packetException) {
+                                LOGGER.debug("BedrockConfigurationFinishMixin: Failed to create proper finish packet: {}", packetException.getMessage());
                                 
-                                // Try alternative approach: look for other completion methods
+                                // Fallback: Try to transition directly using finishConfiguration method
                                 try {
-                                    // Try to find any method that looks like it completes configuration
-                                    java.lang.reflect.Method[] methods = ServerConfigurationPacketListenerImpl.class.getDeclaredMethods();
-                                    for (java.lang.reflect.Method method : methods) {
-                                        if (method.getName().contains("finish") || method.getName().contains("complete") || 
-                                            method.getName().contains("transition") || method.getName().contains("play")) {
-                                            
-                                            if (method.getParameterCount() == 0) {
-                                                method.setAccessible(true);
-                                                method.invoke(self);
-                                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully called {} for: {}", 
-                                                    method.getName(), playerName);
-                                                return;
-                                            }
-                                        }
-                                    }
+                                    java.lang.reflect.Method finishConfigMethod = 
+                                        ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
+                                    finishConfigMethod.setAccessible(true);
+                                    finishConfigMethod.invoke(self);
                                     
-                                    LOGGER.warn("BedrockConfigurationFinishMixin: No suitable completion method found for: {}", playerName);
-                                } catch (Exception methodException) {
-                                    LOGGER.error("BedrockConfigurationFinishMixin: Method search failed for {}: {}", 
-                                        playerName, methodException.getMessage());
+                                    LOGGER.info("BedrockConfigurationFinishMixin: Successfully called finishConfiguration for: {}", playerName);
+                                    
+                                } catch (Exception finishException) {
+                                    LOGGER.error("BedrockConfigurationFinishMixin: All completion methods failed for {}: {}", 
+                                        playerName, finishException.getMessage());
                                 }
                             }
                             
@@ -99,6 +103,28 @@ public class BedrockConfigurationFinishMixin {
             }
         } catch (Exception e) {
             LOGGER.debug("BedrockConfigurationFinishMixin: Exception in configuration finish: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * Clean up handled players when they disconnect to prevent memory leaks.
+     */
+    @Inject(
+        method = "onDisconnect",
+        at = @At("HEAD")
+    )
+    private void cleanupHandledPlayer(net.minecraft.network.chat.Component reason, CallbackInfo ci) {
+        try {
+            ServerConfigurationPacketListenerImpl self = (ServerConfigurationPacketListenerImpl) (Object) this;
+            
+            if (self.getOwner() != null) {
+                String playerName = self.getOwner().getName();
+                if (handledPlayers.remove(playerName)) {
+                    LOGGER.debug("BedrockConfigurationFinishMixin: Cleaned up handled player: {}", playerName);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.debug("BedrockConfigurationFinishMixin: Exception during cleanup: {}", e.getMessage());
         }
     }
 }
