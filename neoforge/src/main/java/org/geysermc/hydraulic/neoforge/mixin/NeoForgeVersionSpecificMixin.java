@@ -57,9 +57,26 @@ public class NeoForgeVersionSpecificMixin {
                         LOGGER.info("NeoForgeVersionSpecificMixin: Disconnect prevented, helping complete configuration for: {}", 
                             self.getOwner().getName());
                         
-                        // Just prevent the disconnect and do nothing else
-                        // Let all other systems handle the configuration naturally
                         ci.cancel(); // Prevent the disconnect
+                        
+                        // Provide minimal nudge to continue configuration without forcing completion
+                        if (self instanceof net.minecraft.server.network.ServerConfigurationPacketListenerImpl) {
+                            net.minecraft.server.network.ServerConfigurationPacketListenerImpl configListener = 
+                                (net.minecraft.server.network.ServerConfigurationPacketListenerImpl) self;
+                            
+                            // Just trigger startNextTask once to continue the flow
+                            try {
+                                java.lang.reflect.Method startNextTaskMethod = 
+                                    net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("startNextTask");
+                                startNextTaskMethod.setAccessible(true);
+                                startNextTaskMethod.invoke(configListener);
+                                
+                                LOGGER.info("NeoForgeVersionSpecificMixin: Triggered configuration continuation for: {}", 
+                                    configListener.getOwner().getName());
+                            } catch (Exception e) {
+                                LOGGER.warn("NeoForgeVersionSpecificMixin: Could not trigger continuation: {}", e.getMessage());
+                            }
+                        }
                         
                         return;
                     }
