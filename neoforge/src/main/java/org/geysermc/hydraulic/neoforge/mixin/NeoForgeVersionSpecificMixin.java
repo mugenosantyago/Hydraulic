@@ -64,18 +64,56 @@ public class NeoForgeVersionSpecificMixin {
                             net.minecraft.server.network.ServerConfigurationPacketListenerImpl configListener = 
                                 (net.minecraft.server.network.ServerConfigurationPacketListenerImpl) self;
                             
-                            // Try to complete configuration immediately
+                            // Try multiple approaches to complete configuration
                             try {
                                 LOGGER.info("NeoForgeVersionSpecificMixin: Attempting to complete configuration for: {}", 
                                     configListener.getOwner().getName());
                                 
-                                java.lang.reflect.Method finishConfigMethod = 
-                                    net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
-                                finishConfigMethod.setAccessible(true);
-                                finishConfigMethod.invoke(configListener);
+                                // Try different method names that might be used for finishing configuration
+                                String[] methodNames = {
+                                    "finishConfiguration",
+                                    "m_294354_", // Common obfuscated name pattern
+                                    "completeConfiguration",
+                                    "finishCurrentConfiguration",
+                                    "startNextTask" // This might trigger completion if no tasks remain
+                                };
                                 
-                                LOGGER.info("NeoForgeVersionSpecificMixin: Successfully completed configuration for Bedrock player: {}", 
-                                    configListener.getOwner().getName());
+                                boolean success = false;
+                                for (String methodName : methodNames) {
+                                    try {
+                                        java.lang.reflect.Method method = 
+                                            net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredMethod(methodName);
+                                        method.setAccessible(true);
+                                        method.invoke(configListener);
+                                        
+                                        LOGGER.info("NeoForgeVersionSpecificMixin: Successfully completed configuration using {} for Bedrock player: {}", 
+                                            methodName, configListener.getOwner().getName());
+                                        success = true;
+                                        break;
+                                    } catch (NoSuchMethodException e) {
+                                        // Try next method name
+                                        continue;
+                                    }
+                                }
+                                
+                                if (!success) {
+                                    LOGGER.warn("NeoForgeVersionSpecificMixin: Could not find suitable completion method, trying alternative approach");
+                                    
+                                    // Alternative: Try to clear the task queue and let normal flow handle it
+                                    try {
+                                        java.lang.reflect.Field tasksField = 
+                                            net.minecraft.server.network.ServerConfigurationPacketListenerImpl.class.getDeclaredField("configurationTasks");
+                                        tasksField.setAccessible(true);
+                                        @SuppressWarnings("unchecked")
+                                        java.util.Queue<?> tasks = (java.util.Queue<?>) tasksField.get(configListener);
+                                        tasks.clear();
+                                        
+                                        LOGGER.info("NeoForgeVersionSpecificMixin: Cleared configuration tasks for Bedrock player: {}", 
+                                            configListener.getOwner().getName());
+                                    } catch (Exception taskException) {
+                                        LOGGER.warn("NeoForgeVersionSpecificMixin: Could not clear tasks: {}", taskException.getMessage());
+                                    }
+                                }
                             } catch (Exception e) {
                                 LOGGER.warn("NeoForgeVersionSpecificMixin: Failed to complete configuration for {}: {}", 
                                     configListener.getOwner().getName(), e.getMessage());
