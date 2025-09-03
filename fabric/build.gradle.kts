@@ -36,7 +36,7 @@ tasks {
 
 dependencies {
     modImplementation(libs.fabric.loader)
-    modApi(libs.fabric.api)
+    modApi("net.fabricmc.fabric-api:fabric-api:0.132.0+1.21.8") // Fabric API for 1.21.8 compatibility
     common(project(":shared", configuration = "namedElements")) { isTransitive = false }
     compileOnly(libs.geyser.api)
 
