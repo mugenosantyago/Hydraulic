@@ -48,24 +48,4 @@ public class NetworkRegistrationMixin {
             LOGGER.debug("NetworkRegistrationMixin: Exception in network registration mixin: {}", e.getMessage());
         }
     }
-
-    /**
-     * Intercepts packet validation to allow packets for Bedrock players.
-     */
-    @Inject(
-        method = "checkPacket",
-        at = @At("HEAD"),
-        cancellable = true,
-        remap = false,
-        require = 0
-    )
-    private static void allowPacketsForBedrockPlayers(Object payload, CallbackInfo ci) {
-        try {
-            // For Bedrock players, we want to allow packets to be sent without validation
-            // This prevents the "Payload may not be sent to the client!" errors
-            ci.cancel(); // Skip the packet validation that causes disconnections
-        } catch (Exception e) {
-            LOGGER.debug("NetworkRegistrationMixin: Exception in checkPacket mixin: {}", e.getMessage());
-        }
-    }
 }
