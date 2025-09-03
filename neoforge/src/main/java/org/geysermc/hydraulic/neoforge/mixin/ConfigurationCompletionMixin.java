@@ -50,16 +50,68 @@ public class ConfigurationCompletionMixin {
                             
                             // Try to finish the configuration since no tasks are left
                             try {
-                                java.lang.reflect.Method finishMethod = 
-                                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
-                                finishMethod.setAccessible(true);
-                                finishMethod.invoke(self);
-                                LOGGER.info("ConfigurationCompletionMixin: Successfully finished configuration for Bedrock player: {}", 
-                                    self.getOwner().getName());
-                                ci.cancel();
-                                return;
+                                // Try multiple method names for finishing configuration
+                                String[] finishMethodNames = {
+                                    "finishConfiguration",
+                                    "m_294354_", // Common obfuscated name
+                                    "completeConfiguration",
+                                    "transitionToGame"
+                                };
+                                
+                                boolean finished = false;
+                                for (String methodName : finishMethodNames) {
+                                    try {
+                                        java.lang.reflect.Method finishMethod = 
+                                            ServerConfigurationPacketListenerImpl.class.getDeclaredMethod(methodName);
+                                        finishMethod.setAccessible(true);
+                                        finishMethod.invoke(self);
+                                        LOGGER.info("ConfigurationCompletionMixin: Successfully finished configuration using {} for Bedrock player: {}", 
+                                            methodName, self.getOwner().getName());
+                                        finished = true;
+                                        ci.cancel();
+                                        return;
+                                    } catch (NoSuchMethodException e) {
+                                        continue; // Try next method
+                                    }
+                                }
+                                
+                                if (!finished) {
+                                    LOGGER.warn("ConfigurationCompletionMixin: Could not find finish method, trying manual transition");
+                                    
+                                    // Try to manually transition to game phase
+                                    try {
+                                        // Look for methods that might transition to game
+                                        String[] transitionMethods = {
+                                            "switchToGame",
+                                            "startGame", 
+                                            "enterGame"
+                                        };
+                                        
+                                        for (String transMethod : transitionMethods) {
+                                            try {
+                                                java.lang.reflect.Method method = 
+                                                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod(transMethod);
+                                                method.setAccessible(true);
+                                                method.invoke(self);
+                                                LOGGER.info("ConfigurationCompletionMixin: Transitioned using {} for Bedrock player: {}", 
+                                                    transMethod, self.getOwner().getName());
+                                                finished = true;
+                                                break;
+                                            } catch (NoSuchMethodException e) {
+                                                continue;
+                                            }
+                                        }
+                                    } catch (Exception transException) {
+                                        LOGGER.warn("ConfigurationCompletionMixin: Manual transition failed: {}", transException.getMessage());
+                                    }
+                                }
+                                
+                                if (finished) {
+                                    ci.cancel();
+                                    return;
+                                }
                             } catch (Exception finishException) {
-                                LOGGER.debug("ConfigurationCompletionMixin: Could not finish configuration: {}", finishException.getMessage());
+                                LOGGER.warn("ConfigurationCompletionMixin: Could not finish configuration: {}", finishException.getMessage());
                             }
                         } else {
                             // Check if remaining tasks are NeoForge tasks that should be skipped
@@ -87,17 +139,36 @@ public class ConfigurationCompletionMixin {
                                     LOGGER.info("ConfigurationCompletionMixin: All NeoForge tasks removed, finishing configuration for Bedrock player: {}", 
                                         self.getOwner().getName());
                                     
-                                    try {
-                                        java.lang.reflect.Method finishMethod = 
-                                            ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
-                                        finishMethod.setAccessible(true);
-                                        finishMethod.invoke(self);
-                                        LOGGER.info("ConfigurationCompletionMixin: Configuration completed for Bedrock player: {}", 
-                                            self.getOwner().getName());
-                                        ci.cancel();
-                                        return;
-                                    } catch (Exception finishException) {
-                                        LOGGER.warn("ConfigurationCompletionMixin: Failed to finish configuration: {}", finishException.getMessage());
+                                    // Try multiple method names for finishing configuration
+                                    String[] finishMethodNames = {
+                                        "finishConfiguration",
+                                        "m_294354_", // Common obfuscated name
+                                        "completeConfiguration",
+                                        "transitionToGame"
+                                    };
+                                    
+                                    boolean finished = false;
+                                    for (String methodName : finishMethodNames) {
+                                        try {
+                                            java.lang.reflect.Method finishMethod = 
+                                                ServerConfigurationPacketListenerImpl.class.getDeclaredMethod(methodName);
+                                            finishMethod.setAccessible(true);
+                                            finishMethod.invoke(self);
+                                            LOGGER.info("ConfigurationCompletionMixin: Configuration completed using {} for Bedrock player: {}", 
+                                                methodName, self.getOwner().getName());
+                                            finished = true;
+                                            ci.cancel();
+                                            return;
+                                        } catch (NoSuchMethodException e) {
+                                            continue; // Try next method
+                                        } catch (Exception finishException) {
+                                            LOGGER.warn("ConfigurationCompletionMixin: Failed to finish configuration with {}: {}", 
+                                                methodName, finishException.getMessage());
+                                        }
+                                    }
+                                    
+                                    if (!finished) {
+                                        LOGGER.warn("ConfigurationCompletionMixin: Could not complete configuration after removing NeoForge tasks");
                                     }
                                 }
                             }
