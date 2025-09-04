@@ -1,0 +1,210 @@
+---- Minecraft Crash Report ----
+// You're mean.
+
+Time: 2025-09-04 10:48:05
+Description: Mod loading failures have occurred; consult the issue messages for more details
+
+net.neoforged.neoforge.logging.CrashReportExtender$ModLoadingCrashException: Mod loading has failed
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- Head --
+Thread: main
+Stacktrace:
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.injection.callback.CallbackInjector.inject(CallbackInjector.java:560) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar%23114!/:0.15.2+mixin.0.8.7] {}
+-- Mod loading issue for: neoforge --
+Details:
+	Caused by 0: org.spongepowered.asm.mixin.transformer.throwables.MixinTransformerError: An unexpected critical error was encountered
+		at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:392) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+		at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:250) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+		at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.service.modlauncher.MixinTransformationHandler.processClass(MixinTransformationHandler.java:131) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+		at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.launch.MixinLaunchPluginLegacy.processClass(MixinLaunchPluginLegacy.java:131) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.serviceapi.ILaunchPluginService.processClassWithFlags(ILaunchPluginService.java:152) ~[loader-9.0.16.jar:9.0] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.LaunchPluginHandler.offerClassNodeToPlugins(LaunchPluginHandler.java:97) ~[loader-9.0.16.jar:9.0] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.ClassTransformer.transform(ClassTransformer.java:133) ~[loader-9.0.16.jar:9.0] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.TransformingClassLoader.maybeTransformClassBytes(TransformingClassLoader.java:54) ~[loader-9.0.16.jar:9.0] {}
+		at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.readerToClass(ModuleClassLoader.java:202) ~[securejarhandler-9.0.16.jar:?] {}
+		at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.lambda$findClass$20(ModuleClassLoader.java:310) ~[securejarhandler-9.0.16.jar:?] {}
+		at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.loadFromModule(ModuleClassLoader.java:323) ~[securejarhandler-9.0.16.jar:?] {}
+		at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.findClass(ModuleClassLoader.java:310) ~[securejarhandler-9.0.16.jar:?] {}
+		at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.loadClass(ModuleClassLoader.java:226) ~[securejarhandler-9.0.16.jar:?] {}
+		at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526) ~[?:?] {}
+		at java.base/java.lang.Class.getDeclaredMethods0(Native Method) ~[?:?] {}
+		at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3578) ~[?:?] {}
+		at java.base/java.lang.Class.getDeclaredMethods(Class.java:2676) ~[?:?] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.javafmlmod.AutomaticEventSubscriber.lambda$inject$4(AutomaticEventSubscriber.java:57) ~[loader-9.0.16.jar%23112!/:9.0] {}
+		at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[?:?] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.javafmlmod.AutomaticEventSubscriber.inject(AutomaticEventSubscriber.java:48) ~[loader-9.0.16.jar%23112!/:9.0] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.javafmlmod.FMLModContainer.constructMod(FMLModContainer.java:129) ~[loader-9.0.16.jar%23112!/:9.0] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.ModLoader.lambda$constructMods$3(ModLoader.java:151) ~[loader-9.0.16.jar%23112!/:9.0] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.ModLoader.lambda$dispatchParallelTask$7(ModLoader.java:229) ~[loader-9.0.16.jar%23112!/:9.0] {}
+		at java.base/java.util.concurrent.CompletableFuture.uniHandle(CompletableFuture.java:934) ~[?:?] {}
+		at java.base/java.util.concurrent.CompletableFuture$UniHandle.tryFire(CompletableFuture.java:911) ~[?:?] {}
+		at java.base/java.util.concurrent.CompletableFuture$Completion.exec(CompletableFuture.java:483) ~[?:?] {}
+		at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:387) ~[?:?] {}
+		at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1312) ~[?:?] {}
+		at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1843) ~[?:?] {re:computing_frames}
+		at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1808) ~[?:?] {re:computing_frames}
+		at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:188) ~[?:?] {}
+
+	Caused by 1: org.spongepowered.asm.mixin.throwables.MixinApplyError: Mixin [hydraulic-neoforge.mixins.json:FinishConfigurationPacketMixin from mod hydraulic] from phase [DEFAULT] in config [hydraulic-neoforge.mixins.json] FAILED during APPLY
+		at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinError(MixinProcessor.java:638) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+		at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinApplyError(MixinProcessor.java:589) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+		at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:379) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+		at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:250) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+		at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.service.modlauncher.MixinTransformationHandler.processClass(MixinTransformationHandler.java:131) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+		at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.launch.MixinLaunchPluginLegacy.processClass(MixinLaunchPluginLegacy.java:131) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.serviceapi.ILaunchPluginService.processClassWithFlags(ILaunchPluginService.java:152) ~[loader-9.0.16.jar:9.0] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.LaunchPluginHandler.offerClassNodeToPlugins(LaunchPluginHandler.java:97) ~[loader-9.0.16.jar:9.0] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.ClassTransformer.transform(ClassTransformer.java:133) ~[loader-9.0.16.jar:9.0] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.TransformingClassLoader.maybeTransformClassBytes(TransformingClassLoader.java:54) ~[loader-9.0.16.jar:9.0] {}
+		at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.readerToClass(ModuleClassLoader.java:202) ~[securejarhandler-9.0.16.jar:?] {}
+		at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.lambda$findClass$20(ModuleClassLoader.java:310) ~[securejarhandler-9.0.16.jar:?] {}
+		at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.loadFromModule(ModuleClassLoader.java:323) ~[securejarhandler-9.0.16.jar:?] {}
+		at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.findClass(ModuleClassLoader.java:310) ~[securejarhandler-9.0.16.jar:?] {}
+		at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.loadClass(ModuleClassLoader.java:226) ~[securejarhandler-9.0.16.jar:?] {}
+		at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526) ~[?:?] {}
+		at java.base/java.lang.Class.getDeclaredMethods0(Native Method) ~[?:?] {}
+		at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3578) ~[?:?] {}
+		at java.base/java.lang.Class.getDeclaredMethods(Class.java:2676) ~[?:?] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.javafmlmod.AutomaticEventSubscriber.lambda$inject$4(AutomaticEventSubscriber.java:57) ~[loader-9.0.16.jar%23112!/:9.0] {}
+		at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[?:?] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.javafmlmod.AutomaticEventSubscriber.inject(AutomaticEventSubscriber.java:48) ~[loader-9.0.16.jar%23112!/:9.0] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.javafmlmod.FMLModContainer.constructMod(FMLModContainer.java:129) ~[loader-9.0.16.jar%23112!/:9.0] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.ModLoader.lambda$constructMods$3(ModLoader.java:151) ~[loader-9.0.16.jar%23112!/:9.0] {}
+		at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.ModLoader.lambda$dispatchParallelTask$7(ModLoader.java:229) ~[loader-9.0.16.jar%23112!/:9.0] {}
+		at java.base/java.util.concurrent.CompletableFuture.uniHandle(CompletableFuture.java:934) ~[?:?] {}
+		at java.base/java.util.concurrent.CompletableFuture$UniHandle.tryFire(CompletableFuture.java:911) ~[?:?] {}
+		at java.base/java.util.concurrent.CompletableFuture$Completion.exec(CompletableFuture.java:483) ~[?:?] {}
+		at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:387) ~[?:?] {}
+		at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1312) ~[?:?] {}
+		at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1843) ~[?:?] {re:computing_frames}
+		at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1808) ~[?:?] {re:computing_frames}
+		at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:188) ~[?:?] {}
+
+	Mod file: /Users/otoyume/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/neoforge-21.8.21-minecraft-merged/1.21.8-loom.mappings.1_21_8.layered+hash.40359-v2-neoforge-21.8.21/neoforge-21.8.21-minecraft-merged-1.21.8-loom.mappings.1_21_8.layered+hash.40359-v2-neoforge-21.8.21.jar
+	Failure message: NeoForge (neoforge) has failed to load correctly
+		org.spongepowered.asm.mixin.transformer.throwables.MixinTransformerError: An unexpected critical error was encountered
+	Mod version: 21.8.21
+	Mod issues URL: https://github.com/neoforged/NeoForge/issues
+	Exception message: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Invalid descriptor on hydraulic-neoforge.mixins.json:FinishConfigurationPacketMixin from mod hydraulic->@Inject::preventFinishConfigurationPacketForBedrock(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V! Expected (Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V but found (Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V [INJECT_APPLY Applicator Phase -> hydraulic-neoforge.mixins.json:FinishConfigurationPacketMixin from mod hydraulic -> Apply Injections ->  -> Inject -> hydraulic-neoforge.mixins.json:FinishConfigurationPacketMixin from mod hydraulic->@Inject::preventFinishConfigurationPacketForBedrock(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V]
+Stacktrace:
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.injection.callback.CallbackInjector.inject(CallbackInjector.java:560) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.injection.callback.CallbackInjector.inject(CallbackInjector.java:490) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.injection.code.Injector.inject(Injector.java:284) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.injection.struct.InjectionInfo.inject(InjectionInfo.java:508) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinTargetContext.applyInjections(MixinTargetContext.java:1483) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyInjections(MixinApplicatorStandard.java:752) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyMixin(MixinApplicatorStandard.java:330) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:246) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:437) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:363) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:250) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.service.modlauncher.MixinTransformationHandler.processClass(MixinTransformationHandler.java:131) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.launch.MixinLaunchPluginLegacy.processClass(MixinLaunchPluginLegacy.java:131) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.serviceapi.ILaunchPluginService.processClassWithFlags(ILaunchPluginService.java:152) ~[loader-9.0.16.jar:9.0] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.LaunchPluginHandler.offerClassNodeToPlugins(LaunchPluginHandler.java:97) ~[loader-9.0.16.jar:9.0] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.ClassTransformer.transform(ClassTransformer.java:133) ~[loader-9.0.16.jar:9.0] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.TransformingClassLoader.maybeTransformClassBytes(TransformingClassLoader.java:54) ~[loader-9.0.16.jar:9.0] {}
+	at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.readerToClass(ModuleClassLoader.java:202) ~[securejarhandler-9.0.16.jar:?] {}
+	at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.lambda$findClass$20(ModuleClassLoader.java:310) ~[securejarhandler-9.0.16.jar:?] {}
+	at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.loadFromModule(ModuleClassLoader.java:323) ~[securejarhandler-9.0.16.jar:?] {}
+	at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.findClass(ModuleClassLoader.java:310) ~[securejarhandler-9.0.16.jar:?] {}
+	at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.loadClass(ModuleClassLoader.java:226) ~[securejarhandler-9.0.16.jar:?] {}
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526) ~[?:?] {}
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method) ~[?:?] {}
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3578) ~[?:?] {}
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2676) ~[?:?] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.javafmlmod.AutomaticEventSubscriber.lambda$inject$4(AutomaticEventSubscriber.java:57) ~[loader-9.0.16.jar%23112!/:9.0] {}
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[?:?] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.javafmlmod.AutomaticEventSubscriber.inject(AutomaticEventSubscriber.java:48) ~[loader-9.0.16.jar%23112!/:9.0] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.javafmlmod.FMLModContainer.constructMod(FMLModContainer.java:129) ~[loader-9.0.16.jar%23112!/:9.0] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.ModLoader.lambda$constructMods$3(ModLoader.java:151) ~[loader-9.0.16.jar%23112!/:9.0] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/net.neoforged.fml.ModLoader.lambda$dispatchParallelTask$7(ModLoader.java:229) ~[loader-9.0.16.jar%23112!/:9.0] {}
+	at java.base/java.util.concurrent.CompletableFuture.uniHandle(CompletableFuture.java:934) ~[?:?] {}
+	at java.base/java.util.concurrent.CompletableFuture$UniHandle.tryFire(CompletableFuture.java:911) ~[?:?] {}
+	at java.base/java.util.concurrent.CompletableFuture$Completion.exec(CompletableFuture.java:483) ~[?:?] {}
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:387) ~[?:?] {}
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1312) ~[?:?] {}
+	at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1843) ~[?:?] {re:computing_frames}
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1808) ~[?:?] {re:computing_frames}
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:188) ~[?:?] {}
+
+
+-- System Details --
+Details:
+	Minecraft Version: 1.21.8
+	Minecraft Version ID: 1.21.8
+	Operating System: Mac OS X (aarch64) version 15.5
+	Java Version: 21.0.8, Homebrew
+	Java VM Version: OpenJDK 64-Bit Server VM (mixed mode, sharing), Homebrew
+	Memory: 784745784 bytes (748 MiB) / 2306867200 bytes (2200 MiB) up to 6442450944 bytes (6144 MiB)
+	CPUs: 12
+	Processor Vendor: Apple Inc.
+	Processor Name: Apple M4 Pro
+	Identifier: Apple Inc. Family 0x1b588bb3 Model 0 Stepping 0
+	Microarchitecture: ARM64 SoC: Firestorm + Icestorm
+	Frequency (GHz): 0.00
+	Number of physical packages: 1
+	Number of physical CPUs: 12
+	Number of logical CPUs: 12
+	Graphics card #0 name: Apple M4 Pro
+	Graphics card #0 vendor: Apple (0x106b)
+	Graphics card #0 VRAM (MiB): 0.00
+	Graphics card #0 deviceId: unknown
+	Graphics card #0 versionInfo: unknown
+	Memory slot #0 capacity (MiB): 0.00
+	Memory slot #0 clockSpeed (GHz): 0.00
+	Memory slot #0 type: unknown
+	Virtual memory max (MiB): 26624.00
+	Virtual memory used (MiB): 19773.22
+	Swap memory total (MiB): 2048.00
+	Swap memory used (MiB): 1391.31
+	Space in storage for jna.tmpdir (MiB): <path not set>
+	Space in storage for org.lwjgl.system.SharedLibraryExtractPath (MiB): <path not set>
+	Space in storage for io.netty.native.workdir (MiB): <path not set>
+	Space in storage for java.io.tmpdir (MiB): available: 6664.23, total: 471482.09
+	Space in storage for workdir (MiB): available: 6664.23, total: 471482.09
+	JVM Flags: 0 total; 
+	ModLauncher: 9.0
+	ModLauncher launch target: neoforgeserverdev
+	ModLauncher services: 
+		sponge-mixin-0.15.2+mixin.0.8.7.jar mixin PLUGINSERVICE 
+		loader-9.0.16.jar neoforgedevdistcleaner PLUGINSERVICE 
+		loader-9.0.16.jar slf4jfixer PLUGINSERVICE 
+		loader-9.0.16.jar runtime_enum_extender PLUGINSERVICE 
+		unprotect-1.3.1.jar unprotect PLUGINSERVICE 
+		loader-9.0.16.jar accesstransformer PLUGINSERVICE 
+		loader-9.0.16.jar mixin TRANSFORMATIONSERVICE 
+		loader-9.0.16.jar fml TRANSFORMATIONSERVICE 
+	FML Language Providers: 
+		javafml@9.0
+		minecraft@9.0
+	Mod List: 
+		3431516312156222688.jar                           |generated_06e4cbd             |generated_06e4cbd             |1                   |Manifest: NOSIGNATURE
+		7178559756081931945.jar                           |generated_096b1ce             |generated_096b1ce             |1                   |Manifest: NOSIGNATURE
+		11328199418036504877.jar                          |generated_281717c             |generated_281717c             |1                   |Manifest: NOSIGNATURE
+		7190096568468474800.jar                           |generated_2a1602c             |generated_2a1602c             |1                   |Manifest: NOSIGNATURE
+		3276742368151392275.jar                           |generated_3f52f68             |generated_3f52f68             |1                   |Manifest: NOSIGNATURE
+		11939046859288531853.jar                          |generated_702bac5             |generated_702bac5             |1                   |Manifest: NOSIGNATURE
+		16015550806994870509.jar                          |generated_7801ed4             |generated_7801ed4             |1                   |Manifest: NOSIGNATURE
+		4288972022052113680.jar                           |generated_79dd250             |generated_79dd250             |1                   |Manifest: NOSIGNATURE
+		4973549638947524389.jar                           |generated_7fc3740             |generated_7fc3740             |1                   |Manifest: NOSIGNATURE
+		4230447852759602845.jar                           |generated_92b9236             |generated_92b9236             |1                   |Manifest: NOSIGNATURE
+		7278106712436793345.jar                           |generated_941159e             |generated_941159e             |1                   |Manifest: NOSIGNATURE
+		13519699432168492054.jar                          |generated_9b62df0             |generated_9b62df0             |1                   |Manifest: NOSIGNATURE
+		9274856577984791839.jar                           |generated_b63851a             |generated_b63851a             |1                   |Manifest: NOSIGNATURE
+		3913285624205235868.jar                           |generated_bbd2c9f             |generated_bbd2c9f             |1                   |Manifest: NOSIGNATURE
+		2690073260218135896.jar                           |generated_c8c569d             |generated_c8c569d             |1                   |Manifest: NOSIGNATURE
+		8914427119234744389.jar                           |generated_dae6a6c             |generated_dae6a6c             |1                   |Manifest: NOSIGNATURE
+		15778260545398382563.jar                          |generated_e983d31             |generated_e983d31             |1                   |Manifest: NOSIGNATURE
+		14893295546737760140.jar                          |generated_ec266d2             |generated_ec266d2             |1                   |Manifest: NOSIGNATURE
+		main                                              |Hydraulic                     |hydraulic                     |1.0.0-SNAPSHOT      |Manifest: NOSIGNATURE
+		neoforge-21.8.21-minecraft-merged-1.21.8-loom.mapp|Minecraft                     |minecraft                     |1.21.8              |Manifest: NOSIGNATURE
+		neoforge-21.8.21-minecraft-merged-1.21.8-loom.mapp|NeoForge                      |neoforge                      |21.8.21             |Manifest: NOSIGNATURE
+	Crash Report UUID: 23bf8d5e-d33d-4257-aed4-275056712cad
+	FML: 9.0.16
+	NeoForge: 21.8.21
