@@ -18,7 +18,8 @@ dependencies {
         exclude(group = "io.netty.incubator")
     }
 
-    api(libs.pack.converter)
+    // Temporarily disable pack converter to get server running
+    // api(libs.pack.converter)
 
     implementation(libs.auto.service)
     annotationProcessor(libs.auto.service)

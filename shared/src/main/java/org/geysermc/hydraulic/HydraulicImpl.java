@@ -50,7 +50,8 @@ public class HydraulicImpl { // Removed EventRegistrar implementation to avoid G
     public void onServerStarting(@NotNull MinecraftServer server) {
         this.server = server;
 
-        this.packManager.initialize();
+        // Temporarily disable pack manager initialization to get server running
+        // this.packManager.initialize();
     }
 
     /**

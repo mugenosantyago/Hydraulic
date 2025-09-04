@@ -39,6 +39,13 @@ dependencies {
         exclude(group = "com.google.errorprone", module = "error_prone_annotations")
         exclude(group = "it.unimi.dsi", module = "fastutil")
         exclude(group = "com.nukkitx.fastutil")
+        
+        // Force resolution strategy to prevent module conflicts
+        resolutionStrategy {
+            force("com.google.code.gson:gson:2.11.0")
+            force("commons-io:commons-io:2.11.0")
+            force("com.nukkitx.fastutil:fastutil-common:8.5.3")
+        }
     }
 
     common(project(":shared", configuration = "namedElements")) { isTransitive = false }
@@ -48,11 +55,12 @@ dependencies {
     shadow(project(path = ":shared", configuration = "transformProductionNeoForge")) { isTransitive = false }
 
     // TODO fix neoforge runServer task
-    modRuntimeOnly(libs.pack.converter)
-    includeTransitive(libs.pack.converter)
+    // Temporarily disable pack converter to get server running
+    // modRuntimeOnly(libs.pack.converter)
+    // includeTransitive(libs.pack.converter)
     
     // Add pack-converter to development runtime to fix LogListener ClassNotFoundException
-    developmentNeoForge(libs.pack.converter)
+    // developmentNeoForge(libs.pack.converter)
 }
 
 tasks {
