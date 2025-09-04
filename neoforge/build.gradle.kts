@@ -30,14 +30,11 @@ dependencies {
         }
     }
     
-    // Exclude conflicting dependencies to avoid module conflicts
+    // Exclude only specific conflicting modules to avoid module conflicts
     configurations.all {
         exclude(group = "com.google.errorprone", module = "error_prone_annotations")
         exclude(group = "it.unimi.dsi", module = "fastutil")
         exclude(group = "com.nukkitx.fastutil")
-        exclude(group = "commons-io", module = "commons-io")
-        exclude(group = "com.google.code.gson", module = "gson")
-        exclude(group = "org.jetbrains", module = "annotations")
     }
 
     common(project(":shared", configuration = "namedElements")) { isTransitive = false }
