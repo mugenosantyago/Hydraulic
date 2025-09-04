@@ -1,9 +1,6 @@
 package org.geysermc.hydraulic.neoforge.mixin;
 
 import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.players.PlayerList;
 import org.geysermc.hydraulic.neoforge.util.BedrockDetectionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,72 +98,48 @@ public class BedrockConfigurationFinishMixin {
      */
     private void forcePlayerWorldTransition(ServerConfigurationPacketListenerImpl listener, String playerName) {
         try {
-            // Method 1: Try returnToWorld
+            // Method 1: Try returnToWorld which is the standard method for transitioning to play phase
             try {
                 java.lang.reflect.Method returnToWorldMethod = 
                     ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("returnToWorld");
                 returnToWorldMethod.setAccessible(true);
                 returnToWorldMethod.invoke(listener);
                 LOGGER.info("BedrockConfigurationFinishMixin: Successfully called returnToWorld for: {}", playerName);
+                return; // If this works, we're done
             } catch (Exception returnException) {
                 LOGGER.debug("BedrockConfigurationFinishMixin: returnToWorld failed: {}", returnException.getMessage());
             }
             
-            // Method 2: Try to manually transition to play state
+            // Method 2: Try finishConfiguration as an alternative
             try {
-                // Get the connection
-                java.lang.reflect.Field connectionField = listener.getClass().getSuperclass().getDeclaredField("connection");
-                connectionField.setAccessible(true);
-                Object connection = connectionField.get(listener);
-                
-                // Get the server
-                java.lang.reflect.Method getServerMethod = listener.getClass().getMethod("getServer");
-                MinecraftServer server = (MinecraftServer) getServerMethod.invoke(listener);
-                
-                // Try to get the player
-                ServerPlayer player = server.getPlayerList().getPlayer(listener.getOwner().getId());
-                if (player != null) {
-                    LOGGER.info("BedrockConfigurationFinishMixin: Found player object, attempting to spawn in world");
-                    
-                    // Force the player to be added to the world if not already
-                    if (!player.hasDisconnected()) {
-                        server.execute(() -> {
-                            try {
-                                // Ensure player is in the correct world
-                                if (player.getLevel() == null) {
-                                    LOGGER.warn("BedrockConfigurationFinishMixin: Player has no level, attempting to set default world");
-                                    player.setLevel(server.overworld());
-                                }
-                                
-                                // Send necessary packets to complete the join process
-                                PlayerList playerList = server.getPlayerList();
-                                playerList.sendLevelInfo(player, player.getLevel());
-                                playerList.sendPlayerPermissionLevel(player);
-                                
-                                // Teleport player to spawn if needed
-                                if (player.getX() == 0 && player.getY() == 0 && player.getZ() == 0) {
-                                    player.teleportTo(
-                                        player.getLevel(),
-                                        player.getLevel().getSharedSpawnPos().getX() + 0.5,
-                                        player.getLevel().getSharedSpawnPos().getY(),
-                                        player.getLevel().getSharedSpawnPos().getZ() + 0.5,
-                                        0, 0
-                                    );
-                                }
-                                
-                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully spawned Bedrock player {} in world", playerName);
-                            } catch (Exception spawnException) {
-                                LOGGER.error("BedrockConfigurationFinishMixin: Failed to spawn player in world: {}", 
-                                    spawnException.getMessage());
-                            }
-                        });
-                    }
-                } else {
-                    LOGGER.warn("BedrockConfigurationFinishMixin: Could not find player object for: {}", playerName);
-                }
-            } catch (Exception playException) {
-                LOGGER.debug("BedrockConfigurationFinishMixin: Manual play transition failed: {}", playException.getMessage());
+                java.lang.reflect.Method finishConfigMethod = 
+                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("finishConfiguration");
+                finishConfigMethod.setAccessible(true);
+                finishConfigMethod.invoke(listener);
+                LOGGER.info("BedrockConfigurationFinishMixin: Successfully called finishConfiguration for: {}", playerName);
+                return; // If this works, we're done
+            } catch (Exception finishException) {
+                LOGGER.debug("BedrockConfigurationFinishMixin: finishConfiguration failed: {}", finishException.getMessage());
             }
+            
+            // Method 3: Try to trigger the configuration completed method
+            try {
+                java.lang.reflect.Method configCompletedMethod = 
+                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("handleConfigurationFinished", 
+                        Class.forName("net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket"));
+                configCompletedMethod.setAccessible(true);
+                
+                // Create the packet instance
+                Class<?> packetClass = Class.forName("net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket");
+                Object packet = packetClass.getDeclaredConstructor().newInstance();
+                
+                configCompletedMethod.invoke(listener, packet);
+                LOGGER.info("BedrockConfigurationFinishMixin: Successfully triggered configuration completed for: {}", playerName);
+            } catch (Exception configException) {
+                LOGGER.debug("BedrockConfigurationFinishMixin: Configuration completed trigger failed: {}", configException.getMessage());
+            }
+            
+            LOGGER.warn("BedrockConfigurationFinishMixin: All transition methods failed for player: {}", playerName);
             
         } catch (Exception e) {
             LOGGER.error("BedrockConfigurationFinishMixin: Failed to force world transition for {}: {}", 
