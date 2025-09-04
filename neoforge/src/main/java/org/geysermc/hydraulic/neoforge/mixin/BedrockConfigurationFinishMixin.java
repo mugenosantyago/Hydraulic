@@ -59,7 +59,27 @@ public class BedrockConfigurationFinishMixin {
                             // Mark this player as handled to prevent duplicate processing
                             handledPlayers.add(playerName);
                             
-                            // Immediately attempt to complete configuration and spawn player
+                            // Send the client-side finish configuration packet first
+                            try {
+                                // Get the connection to send packet to client
+                                java.lang.reflect.Field connectionField = self.getClass().getSuperclass().getDeclaredField("connection");
+                                connectionField.setAccessible(true);
+                                net.minecraft.network.Connection connection = (net.minecraft.network.Connection) connectionField.get(self);
+                                
+                                // Send ClientboundFinishConfigurationPacket to the client
+                                try {
+                                    Class<?> clientPacketClass = Class.forName("net.minecraft.network.protocol.configuration.ClientboundFinishConfigurationPacket");
+                                    Object clientFinishPacket = clientPacketClass.getDeclaredConstructor().newInstance();
+                                    connection.send((net.minecraft.network.protocol.Packet<?>) clientFinishPacket);
+                                    LOGGER.info("BedrockConfigurationFinishMixin: Sent ClientboundFinishConfigurationPacket to client for: {}", playerName);
+                                } catch (Exception clientPacketException) {
+                                    LOGGER.debug("BedrockConfigurationFinishMixin: Could not send client finish packet: {}", clientPacketException.getMessage());
+                                }
+                            } catch (Exception connectionException) {
+                                LOGGER.debug("BedrockConfigurationFinishMixin: Could not access connection: {}", connectionException.getMessage());
+                            }
+                            
+                            // Then handle the server-side transition
                             try {
                                 // First, try to send the finish configuration packet
                                 Class<?> packetClass = Class.forName("net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket");
@@ -70,13 +90,13 @@ public class BedrockConfigurationFinishMixin {
                                 handleFinishMethod.setAccessible(true);
                                 handleFinishMethod.invoke(self, finishPacket);
                                 
-                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully sent finish configuration packet for: {}", playerName);
+                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully handled server-side finish configuration for: {}", playerName);
                                 
-                                // After sending the finish packet, ensure the player transitions to the world
+                                // After handling the packet, ensure the player transitions to the world
                                 forcePlayerWorldTransition(self, playerName);
                                 
                             } catch (Exception finishException) {
-                                LOGGER.warn("BedrockConfigurationFinishMixin: Failed to send finish packet, trying direct transition: {}", 
+                                LOGGER.warn("BedrockConfigurationFinishMixin: Failed to handle server-side finish, trying direct transition: {}", 
                                     finishException.getMessage());
                                 
                                 // If the packet approach fails, try direct transition
