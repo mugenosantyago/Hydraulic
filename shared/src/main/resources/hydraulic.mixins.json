@@ -4,9 +4,6 @@
   "package": "org.geysermc.hydraulic.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "ext.BlockRegistryPopulatorMixin",
-    "ext.ItemTranslatorMixin",
-    "ext.InventoryUtilsMixin",
     "ext.LocationAwareSlf4JLoggerMixin"
   ],
   "injectors": {

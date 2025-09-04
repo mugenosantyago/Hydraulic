@@ -2,7 +2,7 @@ package org.geysermc.hydraulic;
 
 import net.minecraft.server.MinecraftServer;
 // import org.geysermc.geyser.api.event.EventRegistrar; // Commented out to avoid ClassNotFoundException when Geyser is not available
-import org.geysermc.hydraulic.pack.PackManager;
+import org.geysermc.hydraulic.pack.PackManagerStub;
 import org.geysermc.hydraulic.platform.HydraulicBootstrap;
 import org.geysermc.hydraulic.platform.HydraulicPlatform;
 import org.geysermc.hydraulic.platform.mod.ModInfo;
@@ -28,7 +28,7 @@ public class HydraulicImpl { // Removed EventRegistrar implementation to avoid G
 
     private final HydraulicPlatform platform;
     private final HydraulicBootstrap bootstrap;
-    private final PackManager packManager;
+    private final PackManagerStub packManager;
 
     private final Map<String, ModStorage> modStorage = new HashMap<>();
 
@@ -39,7 +39,7 @@ public class HydraulicImpl { // Removed EventRegistrar implementation to avoid G
 
         this.platform = platform;
         this.bootstrap = bootstrap;
-        this.packManager = new PackManager(this);
+        this.packManager = new PackManagerStub(this);
     }
 
     /**
@@ -50,8 +50,7 @@ public class HydraulicImpl { // Removed EventRegistrar implementation to avoid G
     public void onServerStarting(@NotNull MinecraftServer server) {
         this.server = server;
 
-        // Temporarily disable pack manager initialization to get server running
-        // this.packManager.initialize();
+        this.packManager.initialize();
     }
 
     /**
@@ -143,7 +142,7 @@ public class HydraulicImpl { // Removed EventRegistrar implementation to avoid G
         return instance;
     }
 
-    public PackManager getPackManager() {
+    public PackManagerStub getPackManager() {
         return packManager;
     }
 
