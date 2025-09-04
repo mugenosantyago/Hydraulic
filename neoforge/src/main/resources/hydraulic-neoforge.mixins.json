@@ -17,7 +17,6 @@
     "BedrockConfigurationFinishMixin",
     "BedrockPlayTransitionMixin",
     "BedrockClientFinishMixin",
-    "BedrockConnectionStateMixin",
 
     "CustomPacketMixin",
     "GoodNightsSleepMixin",
