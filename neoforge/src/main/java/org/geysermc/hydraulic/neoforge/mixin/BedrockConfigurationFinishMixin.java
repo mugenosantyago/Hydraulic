@@ -79,29 +79,11 @@ public class BedrockConfigurationFinishMixin {
                                 LOGGER.debug("BedrockConfigurationFinishMixin: Could not access connection: {}", connectionException.getMessage());
                             }
                             
-                            // Then handle the server-side transition
-                            try {
-                                // First, try to send the finish configuration packet
-                                Class<?> packetClass = Class.forName("net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket");
-                                Object finishPacket = packetClass.getDeclaredConstructor().newInstance();
-                                
-                                java.lang.reflect.Method handleFinishMethod = 
-                                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("handleConfigurationFinished", packetClass);
-                                handleFinishMethod.setAccessible(true);
-                                handleFinishMethod.invoke(self, finishPacket);
-                                
-                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully handled server-side finish configuration for: {}", playerName);
-                                
-                                // After handling the packet, ensure the player transitions to the world
-                                forcePlayerWorldTransition(self, playerName);
-                                
-                            } catch (Exception finishException) {
-                                LOGGER.warn("BedrockConfigurationFinishMixin: Failed to handle server-side finish, trying direct transition: {}", 
-                                    finishException.getMessage());
-                                
-                                // If the packet approach fails, try direct transition
-                                forcePlayerWorldTransition(self, playerName);
-                            }
+                            // Handle the server-side transition directly without packet creation
+                            LOGGER.info("BedrockConfigurationFinishMixin: Attempting direct server-side transition for: {}", playerName);
+                            
+                            // Skip packet creation and go directly to transition methods
+                            forcePlayerWorldTransition(self, playerName);
                         }
                     } catch (Exception reflectionException) {
                         LOGGER.debug("BedrockConfigurationFinishMixin: Could not access task queue: {}", reflectionException.getMessage());
@@ -142,21 +124,37 @@ public class BedrockConfigurationFinishMixin {
                 LOGGER.debug("BedrockConfigurationFinishMixin: finishConfiguration failed: {}", finishException.getMessage());
             }
             
-            // Method 3: Try to trigger the configuration completed method
+            // Method 3: Try to access and call startNextTask to force completion
             try {
-                java.lang.reflect.Method configCompletedMethod = 
-                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("handleConfigurationFinished", 
-                        Class.forName("net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket"));
-                configCompletedMethod.setAccessible(true);
+                java.lang.reflect.Method startNextTaskMethod = 
+                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("startNextTask");
+                startNextTaskMethod.setAccessible(true);
+                startNextTaskMethod.invoke(listener);
+                LOGGER.info("BedrockConfigurationFinishMixin: Successfully called startNextTask for: {}", playerName);
+                return; // If this works, we're done
+            } catch (Exception startTaskException) {
+                LOGGER.debug("BedrockConfigurationFinishMixin: startNextTask failed: {}", startTaskException.getMessage());
+            }
+            
+            // Method 4: Try to force the connection to change protocol state
+            try {
+                // Get the connection and force protocol change
+                java.lang.reflect.Field connectionField = listener.getClass().getSuperclass().getDeclaredField("connection");
+                connectionField.setAccessible(true);
+                net.minecraft.network.Connection connection = (net.minecraft.network.Connection) connectionField.get(listener);
                 
-                // Create the packet instance
-                Class<?> packetClass = Class.forName("net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket");
-                Object packet = packetClass.getDeclaredConstructor().newInstance();
-                
-                configCompletedMethod.invoke(listener, packet);
-                LOGGER.info("BedrockConfigurationFinishMixin: Successfully triggered configuration completed for: {}", playerName);
-            } catch (Exception configException) {
-                LOGGER.debug("BedrockConfigurationFinishMixin: Configuration completed trigger failed: {}", configException.getMessage());
+                // Try to set the protocol to PLAY directly
+                try {
+                    java.lang.reflect.Field protocolField = connection.getClass().getDeclaredField("protocol");
+                    protocolField.setAccessible(true);
+                    Object playProtocol = net.minecraft.network.ConnectionProtocol.PLAY;
+                    protocolField.set(connection, playProtocol);
+                    LOGGER.info("BedrockConfigurationFinishMixin: Forced connection protocol to PLAY for: {}", playerName);
+                } catch (Exception protocolException) {
+                    LOGGER.debug("BedrockConfigurationFinishMixin: Could not set protocol: {}", protocolException.getMessage());
+                }
+            } catch (Exception connectionException) {
+                LOGGER.debug("BedrockConfigurationFinishMixin: Could not access connection for protocol change: {}", connectionException.getMessage());
             }
             
             LOGGER.warn("BedrockConfigurationFinishMixin: All transition methods failed for player: {}", playerName);
