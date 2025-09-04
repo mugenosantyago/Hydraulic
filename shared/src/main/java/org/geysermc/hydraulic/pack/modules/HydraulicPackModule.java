@@ -11,7 +11,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Map;
 
-@AutoService(PackModule.class)
+// Temporarily disabled AutoService to prevent ServiceLoader issues
+// @AutoService(PackModule.class)
 public class HydraulicPackModule extends PackModule<HydraulicPackModule> {
     public HydraulicPackModule() {
         this.postProcess(context -> {

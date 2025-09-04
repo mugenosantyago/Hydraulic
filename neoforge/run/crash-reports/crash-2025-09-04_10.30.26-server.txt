@@ -1,0 +1,152 @@
+---- Minecraft Crash Report ----
+// Daisy, daisy...
+
+Time: 2025-09-04 10:30:26
+Description: Exception in server tick loop
+
+org.spongepowered.asm.mixin.transformer.throwables.MixinTransformerError: An unexpected critical error was encountered
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:392) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:250) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.service.modlauncher.MixinTransformationHandler.processClass(MixinTransformationHandler.java:131) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.launch.MixinLaunchPluginLegacy.processClass(MixinLaunchPluginLegacy.java:131) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.serviceapi.ILaunchPluginService.processClassWithFlags(ILaunchPluginService.java:152) ~[loader-9.0.16.jar:9.0] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.LaunchPluginHandler.offerClassNodeToPlugins(LaunchPluginHandler.java:97) ~[loader-9.0.16.jar:9.0] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.ClassTransformer.transform(ClassTransformer.java:133) ~[loader-9.0.16.jar:9.0] {}
+	at MC-BOOTSTRAP/fml_loader@9.0.16/cpw.mods.modlauncher.TransformingClassLoader.maybeTransformClassBytes(TransformingClassLoader.java:54) ~[loader-9.0.16.jar:9.0] {}
+	at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.readerToClass(ModuleClassLoader.java:202) ~[securejarhandler-9.0.16.jar:?] {}
+	at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.lambda$findClass$20(ModuleClassLoader.java:310) ~[securejarhandler-9.0.16.jar:?] {}
+	at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.loadFromModule(ModuleClassLoader.java:323) ~[securejarhandler-9.0.16.jar:?] {}
+	at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.findClass(ModuleClassLoader.java:310) ~[securejarhandler-9.0.16.jar:?] {}
+	at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.loadClass(ModuleClassLoader.java:226) ~[securejarhandler-9.0.16.jar:?] {}
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526) ~[?:?] {}
+	at TRANSFORMER/generated_8607e7a@1/team.unnamed.creative.serialize.minecraft.ResourceCategories.<clinit>(ResourceCategories.java:49) ~[16554102605916934271.jar%23222!/:?] {re:classloading}
+	at TRANSFORMER/generated_8607e7a@1/team.unnamed.creative.serialize.minecraft.MinecraftResourcePackReaderImpl.read(MinecraftResourcePackReaderImpl.java:88) ~[16554102605916934271.jar%23222!/:?] {re:classloading,pl:mixin:APP:hydraulic.mixins.json:ext.MinecraftResourcePackReaderImplMixin from mod hydraulic,pl:mixin:A}
+	at TRANSFORMER/generated_561ba7a@1/org.geysermc.hydraulic.pack.PackManager.lambda$initialize$0(PackManager.java:108) ~[13932632484959371950.jar%23230!/:?] {re:classloading}
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197) ~[?:?] {}
+	at java.base/java.util.AbstractList$RandomAccessSpliterator.forEachRemaining(AbstractList.java:722) ~[?:?] {}
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509) ~[?:?] {}
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499) ~[?:?] {}
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:575) ~[?:?] {}
+	at java.base/java.util.stream.AbstractPipeline.evaluateToArrayNode(AbstractPipeline.java:260) ~[?:?] {}
+	at java.base/java.util.stream.ReferencePipeline.toArray(ReferencePipeline.java:616) ~[?:?] {}
+	at java.base/java.util.stream.ReferencePipeline.toArray(ReferencePipeline.java:622) ~[?:?] {}
+	at java.base/java.util.stream.ReferencePipeline.toList(ReferencePipeline.java:627) ~[?:?] {}
+	at TRANSFORMER/generated_561ba7a@1/org.geysermc.hydraulic.pack.PackManager.initialize(PackManager.java:115) ~[13932632484959371950.jar%23230!/:?] {re:classloading}
+	at TRANSFORMER/generated_561ba7a@1/org.geysermc.hydraulic.HydraulicImpl.onServerStarting(HydraulicImpl.java:53) ~[13932632484959371950.jar%23230!/:?] {re:classloading}
+	at TRANSFORMER/hydraulic@1.0.0-SNAPSHOT/org.geysermc.hydraulic.neoforge.HydraulicNeoForgeMod.onServerStarting(HydraulicNeoForgeMod.java:22) ~[%23216!/:?] {re:classloading}
+	at MC-BOOTSTRAP/net.neoforged.bus/net.neoforged.bus.ConsumerEventHandler.invoke(ConsumerEventHandler.java:27) ~[bus-8.0.5.jar%23120!/:?] {}
+	at MC-BOOTSTRAP/net.neoforged.bus/net.neoforged.bus.EventBus.post(EventBus.java:360) ~[bus-8.0.5.jar%23120!/:?] {}
+	at MC-BOOTSTRAP/net.neoforged.bus/net.neoforged.bus.EventBus.post(EventBus.java:328) ~[bus-8.0.5.jar%23120!/:?] {}
+	at TRANSFORMER/neoforge@21.8.21/net.neoforged.neoforge.server.ServerLifecycleHooks.handleServerStarting(ServerLifecycleHooks.java:103) ~[neoforge-21.8.21-minecraft-merged-1.21.8-loom.mappings.1_21_8.layered+hash.40359-v2-neoforge-21.8.21.jar%23215!/:?] {re:classloading}
+	at TRANSFORMER/minecraft@1.21.8/net.minecraft.server.dedicated.DedicatedServer.initServer(DedicatedServer.java:229) ~[neoforge-21.8.21-minecraft-merged-1.21.8-loom.mappings.1_21_8.layered+hash.40359-v2-neoforge-21.8.21.jar%23214!/:?] {re:classloading,pl:unprotect:A}
+	at TRANSFORMER/minecraft@1.21.8/net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:676) ~[neoforge-21.8.21-minecraft-merged-1.21.8-loom.mappings.1_21_8.layered+hash.40359-v2-neoforge-21.8.21.jar%23214!/:?] {re:mixin,pl:accesstransformer:B,pl:unprotect:A,re:classloading,pl:accesstransformer:B,pl:mixin:APP:hydraulic-neoforge.mixins.json:DiagnosticMixin from mod hydraulic,pl:mixin:A,pl:unprotect:A}
+	at TRANSFORMER/minecraft@1.21.8/net.minecraft.server.MinecraftServer.method_29739(MinecraftServer.java:277) ~[neoforge-21.8.21-minecraft-merged-1.21.8-loom.mappings.1_21_8.layered+hash.40359-v2-neoforge-21.8.21.jar%23214!/:?] {re:mixin,pl:accesstransformer:B,pl:unprotect:A,re:classloading,pl:accesstransformer:B,pl:mixin:APP:hydraulic-neoforge.mixins.json:DiagnosticMixin from mod hydraulic,pl:mixin:A,pl:unprotect:A}
+	at java.base/java.lang.Thread.run(Thread.java:1583) [?:?] {}
+Caused by: org.spongepowered.asm.mixin.throwables.MixinApplyError: Mixin [hydraulic.mixins.json:ext.ModelSerializerMixin from mod hydraulic] from phase [DEFAULT] in config [hydraulic.mixins.json] FAILED during APPLY
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinError(MixinProcessor.java:638) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinApplyError(MixinProcessor.java:589) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:379) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	... 36 more
+Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: non-static callback method team/unnamed/creative/serialize/minecraft/model/ModelSerializer::redirectElementRotationBuild targets a static method which is not supported [INJECT_APPLY Applicator Phase -> hydraulic.mixins.json:ext.ModelSerializerMixin from mod hydraulic -> Apply Injections ->  -> Inject -> hydraulic.mixins.json:ext.ModelSerializerMixin from mod hydraulic->@Redirect::redirectElementRotationBuild(Lteam/unnamed/creative/model/ElementRotation$Builder;)Lteam/unnamed/creative/model/ElementRotation;]
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.injection.code.Injector.checkTargetModifiers(Injector.java:371) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.injection.code.Injector.checkTargetForNode(Injector.java:416) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.injection.invoke.RedirectInjector.inject(RedirectInjector.java:332) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.injection.code.Injector.inject(Injector.java:284) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.injection.struct.InjectionInfo.inject(InjectionInfo.java:508) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinTargetContext.applyInjections(MixinTargetContext.java:1483) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyInjections(MixinApplicatorStandard.java:752) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyMixin(MixinApplicatorStandard.java:330) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:246) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:437) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	at MC-BOOTSTRAP/org.spongepowered.mixin/org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:363) ~[sponge-mixin-0.15.2+mixin.0.8.7.jar:0.15.2+mixin.0.8.7] {}
+	... 36 more
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- System Details --
+Details:
+	Minecraft Version: 1.21.8
+	Minecraft Version ID: 1.21.8
+	Operating System: Mac OS X (aarch64) version 15.5
+	Java Version: 21.0.8, Homebrew
+	Java VM Version: OpenJDK 64-Bit Server VM (mixed mode, sharing), Homebrew
+	Memory: 814335464 bytes (776 MiB) / 2197815296 bytes (2096 MiB) up to 6442450944 bytes (6144 MiB)
+	CPUs: 12
+	Processor Vendor: Apple Inc.
+	Processor Name: Apple M4 Pro
+	Identifier: Apple Inc. Family 0x1b588bb3 Model 0 Stepping 0
+	Microarchitecture: ARM64 SoC: Firestorm + Icestorm
+	Frequency (GHz): 0.00
+	Number of physical packages: 1
+	Number of physical CPUs: 12
+	Number of logical CPUs: 12
+	Graphics card #0 name: Apple M4 Pro
+	Graphics card #0 vendor: Apple (0x106b)
+	Graphics card #0 VRAM (MiB): 0.00
+	Graphics card #0 deviceId: unknown
+	Graphics card #0 versionInfo: unknown
+	Memory slot #0 capacity (MiB): 0.00
+	Memory slot #0 clockSpeed (GHz): 0.00
+	Memory slot #0 type: unknown
+	Virtual memory max (MiB): 26624.00
+	Virtual memory used (MiB): 19711.89
+	Swap memory total (MiB): 2048.00
+	Swap memory used (MiB): 1415.31
+	Space in storage for jna.tmpdir (MiB): <path not set>
+	Space in storage for org.lwjgl.system.SharedLibraryExtractPath (MiB): <path not set>
+	Space in storage for io.netty.native.workdir (MiB): <path not set>
+	Space in storage for java.io.tmpdir (MiB): available: 7082.10, total: 471482.09
+	Space in storage for workdir (MiB): available: 7082.10, total: 471482.09
+	JVM Flags: 0 total; 
+	Server Running: true
+	Player Count: 0 / 20; []
+	Active Data Packs: vanilla, mod_data, mod/generated_2340c81 (incompatible), mod/generated_561ba7a (incompatible), mod/generated_5f44af3 (incompatible), mod/generated_2038c3d (incompatible), mod/generated_c4a0415 (incompatible), mod/generated_4cb7c92 (incompatible), mod/generated_8607e7a (incompatible), mod/generated_711d4dd (incompatible), mod/generated_f25428e (incompatible), mod/generated_b013e1f (incompatible), mod/generated_6e76b17 (incompatible), mod/generated_17fdac4 (incompatible), mod/generated_0da96a3 (incompatible), mod/generated_2cdfb14 (incompatible), mod/generated_8ae636b (incompatible), mod/hydraulic, mod/generated_f0bcdfc (incompatible), mod/generated_3ecce96 (incompatible), mod/generated_74d2bd8 (incompatible), mod/neoforge
+	Available Data Packs: minecart_improvements, redstone_experiments, trade_rebalance, vanilla, mod/generated_0da96a3 (incompatible), mod/generated_17fdac4 (incompatible), mod/generated_2038c3d (incompatible), mod/generated_2340c81 (incompatible), mod/generated_2cdfb14 (incompatible), mod/generated_3ecce96 (incompatible), mod/generated_4cb7c92 (incompatible), mod/generated_561ba7a (incompatible), mod/generated_5f44af3 (incompatible), mod/generated_6e76b17 (incompatible), mod/generated_711d4dd (incompatible), mod/generated_74d2bd8 (incompatible), mod/generated_8607e7a (incompatible), mod/generated_8ae636b (incompatible), mod/generated_b013e1f (incompatible), mod/generated_c4a0415 (incompatible), mod/generated_f0bcdfc (incompatible), mod/generated_f25428e (incompatible), mod/hydraulic, mod/neoforge, mod_data
+	Enabled Feature Flags: minecraft:vanilla
+	World Generation: Stable
+	World Seed: -7240144472330307830
+	Suppressed Exceptions: ~~NONE~~
+	Is Modded: Definitely; Server brand changed to 'neoforge'
+	Type: Dedicated Server (map_server.txt)
+	ModLauncher: 9.0
+	ModLauncher launch target: neoforgeserverdev
+	ModLauncher services: 
+		sponge-mixin-0.15.2+mixin.0.8.7.jar mixin PLUGINSERVICE 
+		loader-9.0.16.jar neoforgedevdistcleaner PLUGINSERVICE 
+		loader-9.0.16.jar slf4jfixer PLUGINSERVICE 
+		loader-9.0.16.jar runtime_enum_extender PLUGINSERVICE 
+		unprotect-1.3.1.jar unprotect PLUGINSERVICE 
+		loader-9.0.16.jar accesstransformer PLUGINSERVICE 
+		loader-9.0.16.jar mixin TRANSFORMATIONSERVICE 
+		loader-9.0.16.jar fml TRANSFORMATIONSERVICE 
+	FML Language Providers: 
+		javafml@9.0
+		minecraft@9.0
+	Mod List: 
+		7501914222364147615.jar                           |generated_0da96a3             |generated_0da96a3             |1                   |Manifest: NOSIGNATURE
+		349519348970825343.jar                            |generated_17fdac4             |generated_17fdac4             |1                   |Manifest: NOSIGNATURE
+		7620637179203686674.jar                           |generated_2038c3d             |generated_2038c3d             |1                   |Manifest: NOSIGNATURE
+		3797425308587962996.jar                           |generated_2340c81             |generated_2340c81             |1                   |Manifest: NOSIGNATURE
+		9704008827798691972.jar                           |generated_2cdfb14             |generated_2cdfb14             |1                   |Manifest: NOSIGNATURE
+		9464153731206867008.jar                           |generated_3ecce96             |generated_3ecce96             |1                   |Manifest: NOSIGNATURE
+		2739164082284119992.jar                           |generated_4cb7c92             |generated_4cb7c92             |1                   |Manifest: NOSIGNATURE
+		13932632484959371950.jar                          |generated_561ba7a             |generated_561ba7a             |1                   |Manifest: NOSIGNATURE
+		15529358781696662981.jar                          |generated_5f44af3             |generated_5f44af3             |1                   |Manifest: NOSIGNATURE
+		13917461373395562530.jar                          |generated_6e76b17             |generated_6e76b17             |1                   |Manifest: NOSIGNATURE
+		14326654750875978425.jar                          |generated_711d4dd             |generated_711d4dd             |1                   |Manifest: NOSIGNATURE
+		17076606703045066966.jar                          |generated_74d2bd8             |generated_74d2bd8             |1                   |Manifest: NOSIGNATURE
+		16554102605916934271.jar                          |generated_8607e7a             |generated_8607e7a             |1                   |Manifest: NOSIGNATURE
+		6883294151278332712.jar                           |generated_8ae636b             |generated_8ae636b             |1                   |Manifest: NOSIGNATURE
+		14797645517125109222.jar                          |generated_b013e1f             |generated_b013e1f             |1                   |Manifest: NOSIGNATURE
+		13717181145678950010.jar                          |generated_c4a0415             |generated_c4a0415             |1                   |Manifest: NOSIGNATURE
+		8272631237482513750.jar                           |generated_f0bcdfc             |generated_f0bcdfc             |1                   |Manifest: NOSIGNATURE
+		11167577165463447614.jar                          |generated_f25428e             |generated_f25428e             |1                   |Manifest: NOSIGNATURE
+		main                                              |Hydraulic                     |hydraulic                     |1.0.0-SNAPSHOT      |Manifest: NOSIGNATURE
+		neoforge-21.8.21-minecraft-merged-1.21.8-loom.mapp|Minecraft                     |minecraft                     |1.21.8              |Manifest: NOSIGNATURE
+		neoforge-21.8.21-minecraft-merged-1.21.8-loom.mapp|NeoForge                      |neoforge                      |21.8.21             |Manifest: NOSIGNATURE
+	Crash Report UUID: 75b466e2-7867-42b9-b9f2-2b99dda365b1
+	FML: 9.0.16
+	NeoForge: 21.8.21

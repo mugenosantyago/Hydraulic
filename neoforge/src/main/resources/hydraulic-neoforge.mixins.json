@@ -15,6 +15,7 @@
     "GlobalDisconnectMixin",
     "ServerCommonPacketListenerMixin",
     "BedrockConfigurationFinishMixin",
+    "BedrockLoadingScreenFixMixin",
 
     "CustomPacketMixin",
     "GoodNightsSleepMixin",

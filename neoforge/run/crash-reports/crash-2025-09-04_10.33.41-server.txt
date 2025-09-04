@@ -1,0 +1,139 @@
+---- Minecraft Crash Report ----
+// Oops.
+
+Time: 2025-09-04 10:33:41
+Description: Exception in server tick loop
+
+java.util.ServiceConfigurationError: org.geysermc.hydraulic.pack.PackModule: org.geysermc.hydraulic.block.BlockPackModule Unable to get public no-arg constructor
+	at java.base/java.util.ServiceLoader.fail(ServiceLoader.java:586) ~[?:?] {}
+	at java.base/java.util.ServiceLoader.getConstructor(ServiceLoader.java:679) ~[?:?] {}
+	at java.base/java.util.ServiceLoader.loadProvider(ServiceLoader.java:906) ~[?:?] {}
+	at java.base/java.util.ServiceLoader$ModuleServicesLookupIterator.hasNext(ServiceLoader.java:1084) ~[?:?] {}
+	at java.base/java.util.ServiceLoader$2.hasNext(ServiceLoader.java:1309) ~[?:?] {}
+	at java.base/java.util.ServiceLoader$3.hasNext(ServiceLoader.java:1393) ~[?:?] {}
+	at TRANSFORMER/generated_da71bf0@1/org.geysermc.hydraulic.pack.PackManager.initialize(PackManager.java:144) ~[3456379487329224698.jar%23230!/:?] {re:classloading}
+	at TRANSFORMER/generated_da71bf0@1/org.geysermc.hydraulic.HydraulicImpl.onServerStarting(HydraulicImpl.java:53) ~[3456379487329224698.jar%23230!/:?] {re:classloading}
+	at TRANSFORMER/hydraulic@1.0.0-SNAPSHOT/org.geysermc.hydraulic.neoforge.HydraulicNeoForgeMod.onServerStarting(HydraulicNeoForgeMod.java:22) ~[%23216!/:?] {re:classloading}
+	at MC-BOOTSTRAP/net.neoforged.bus/net.neoforged.bus.ConsumerEventHandler.invoke(ConsumerEventHandler.java:27) ~[bus-8.0.5.jar%23120!/:?] {}
+	at MC-BOOTSTRAP/net.neoforged.bus/net.neoforged.bus.EventBus.post(EventBus.java:360) ~[bus-8.0.5.jar%23120!/:?] {}
+	at MC-BOOTSTRAP/net.neoforged.bus/net.neoforged.bus.EventBus.post(EventBus.java:328) ~[bus-8.0.5.jar%23120!/:?] {}
+	at TRANSFORMER/neoforge@21.8.21/net.neoforged.neoforge.server.ServerLifecycleHooks.handleServerStarting(ServerLifecycleHooks.java:103) ~[neoforge-21.8.21-minecraft-merged-1.21.8-loom.mappings.1_21_8.layered+hash.40359-v2-neoforge-21.8.21.jar%23215!/:?] {re:classloading}
+	at TRANSFORMER/minecraft@1.21.8/net.minecraft.server.dedicated.DedicatedServer.initServer(DedicatedServer.java:229) ~[neoforge-21.8.21-minecraft-merged-1.21.8-loom.mappings.1_21_8.layered+hash.40359-v2-neoforge-21.8.21.jar%23214!/:?] {re:classloading,pl:unprotect:A}
+	at TRANSFORMER/minecraft@1.21.8/net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:676) ~[neoforge-21.8.21-minecraft-merged-1.21.8-loom.mappings.1_21_8.layered+hash.40359-v2-neoforge-21.8.21.jar%23214!/:?] {re:mixin,pl:accesstransformer:B,pl:unprotect:A,re:classloading,pl:accesstransformer:B,pl:mixin:APP:hydraulic-neoforge.mixins.json:DiagnosticMixin from mod hydraulic,pl:mixin:A,pl:unprotect:A}
+	at TRANSFORMER/minecraft@1.21.8/net.minecraft.server.MinecraftServer.method_29739(MinecraftServer.java:277) ~[neoforge-21.8.21-minecraft-merged-1.21.8-loom.mappings.1_21_8.layered+hash.40359-v2-neoforge-21.8.21.jar%23214!/:?] {re:mixin,pl:accesstransformer:B,pl:unprotect:A,re:classloading,pl:accesstransformer:B,pl:mixin:APP:hydraulic-neoforge.mixins.json:DiagnosticMixin from mod hydraulic,pl:mixin:A,pl:unprotect:A}
+	at java.base/java.lang.Thread.run(Thread.java:1583) [?:?] {}
+Caused by: java.lang.NoClassDefFoundError: org/geysermc/geyser/api/block/custom/CustomBlockData$Builder
+	at java.base/java.lang.Class.getDeclaredConstructors0(Native Method) ~[?:?] {}
+	at java.base/java.lang.Class.privateGetDeclaredConstructors(Class.java:3549) ~[?:?] {}
+	at java.base/java.lang.Class.getConstructor0(Class.java:3754) ~[?:?] {}
+	at java.base/java.lang.Class.getConstructor(Class.java:2442) ~[?:?] {}
+	at java.base/java.util.ServiceLoader$1.run(ServiceLoader.java:666) ~[?:?] {}
+	at java.base/java.util.ServiceLoader$1.run(ServiceLoader.java:663) ~[?:?] {}
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:571) ~[?:?] {}
+	at java.base/java.util.ServiceLoader.getConstructor(ServiceLoader.java:674) ~[?:?] {}
+	... 15 more
+Caused by: java.lang.ClassNotFoundException: org.geysermc.geyser.api.block.custom.CustomBlockData$Builder
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641) ~[?:?] {}
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526) ~[?:?] {}
+	at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.loadClass(ModuleClassLoader.java:228) ~[securejarhandler-9.0.16.jar:?] {}
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526) ~[?:?] {}
+	at cpw.mods.securejarhandler/cpw.mods.cl.ModuleClassLoader.loadClass(ModuleClassLoader.java:228) ~[securejarhandler-9.0.16.jar:?] {}
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526) ~[?:?] {}
+	at java.base/java.lang.Class.getDeclaredConstructors0(Native Method) ~[?:?] {}
+	at java.base/java.lang.Class.privateGetDeclaredConstructors(Class.java:3549) ~[?:?] {}
+	at java.base/java.lang.Class.getConstructor0(Class.java:3754) ~[?:?] {}
+	at java.base/java.lang.Class.getConstructor(Class.java:2442) ~[?:?] {}
+	at java.base/java.util.ServiceLoader$1.run(ServiceLoader.java:666) ~[?:?] {}
+	at java.base/java.util.ServiceLoader$1.run(ServiceLoader.java:663) ~[?:?] {}
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:571) ~[?:?] {}
+	at java.base/java.util.ServiceLoader.getConstructor(ServiceLoader.java:674) ~[?:?] {}
+	... 15 more
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- System Details --
+Details:
+	Minecraft Version: 1.21.8
+	Minecraft Version ID: 1.21.8
+	Operating System: Mac OS X (aarch64) version 15.5
+	Java Version: 21.0.8, Homebrew
+	Java VM Version: OpenJDK 64-Bit Server VM (mixed mode, sharing), Homebrew
+	Memory: 753380960 bytes (718 MiB) / 2071986176 bytes (1976 MiB) up to 6442450944 bytes (6144 MiB)
+	CPUs: 12
+	Processor Vendor: Apple Inc.
+	Processor Name: Apple M4 Pro
+	Identifier: Apple Inc. Family 0x1b588bb3 Model 0 Stepping 0
+	Microarchitecture: ARM64 SoC: Firestorm + Icestorm
+	Frequency (GHz): 0.00
+	Number of physical packages: 1
+	Number of physical CPUs: 12
+	Number of logical CPUs: 12
+	Graphics card #0 name: Apple M4 Pro
+	Graphics card #0 vendor: Apple (0x106b)
+	Graphics card #0 VRAM (MiB): 0.00
+	Graphics card #0 deviceId: unknown
+	Graphics card #0 versionInfo: unknown
+	Memory slot #0 capacity (MiB): 0.00
+	Memory slot #0 clockSpeed (GHz): 0.00
+	Memory slot #0 type: unknown
+	Virtual memory max (MiB): 26624.00
+	Virtual memory used (MiB): 19707.78
+	Swap memory total (MiB): 2048.00
+	Swap memory used (MiB): 1415.31
+	Space in storage for jna.tmpdir (MiB): <path not set>
+	Space in storage for org.lwjgl.system.SharedLibraryExtractPath (MiB): <path not set>
+	Space in storage for io.netty.native.workdir (MiB): <path not set>
+	Space in storage for java.io.tmpdir (MiB): available: 6950.58, total: 471482.09
+	Space in storage for workdir (MiB): available: 6950.58, total: 471482.09
+	JVM Flags: 0 total; 
+	Server Running: true
+	Player Count: 0 / 20; []
+	Active Data Packs: vanilla, mod_data, mod/generated_0ffbe52 (incompatible), mod/generated_2870cd7 (incompatible), mod/generated_da71bf0 (incompatible), mod/generated_a6d4892 (incompatible), mod/generated_b5eeb18 (incompatible), mod/generated_0f1f137 (incompatible), mod/generated_74b6d63 (incompatible), mod/generated_a0dea30 (incompatible), mod/generated_aa4c32e (incompatible), mod/generated_7de1529 (incompatible), mod/generated_4aa0d9d (incompatible), mod/hydraulic, mod/generated_dd45b99 (incompatible), mod/generated_de404fa (incompatible), mod/generated_ad21c5f (incompatible), mod/generated_dfa5dc8 (incompatible), mod/neoforge, mod/generated_9032933 (incompatible), mod/generated_72d8fa8 (incompatible), mod/generated_f0724ab (incompatible)
+	Available Data Packs: minecart_improvements, redstone_experiments, trade_rebalance, vanilla, mod/generated_0f1f137 (incompatible), mod/generated_0ffbe52 (incompatible), mod/generated_2870cd7 (incompatible), mod/generated_4aa0d9d (incompatible), mod/generated_72d8fa8 (incompatible), mod/generated_74b6d63 (incompatible), mod/generated_7de1529 (incompatible), mod/generated_9032933 (incompatible), mod/generated_a0dea30 (incompatible), mod/generated_a6d4892 (incompatible), mod/generated_aa4c32e (incompatible), mod/generated_ad21c5f (incompatible), mod/generated_b5eeb18 (incompatible), mod/generated_da71bf0 (incompatible), mod/generated_dd45b99 (incompatible), mod/generated_de404fa (incompatible), mod/generated_dfa5dc8 (incompatible), mod/generated_f0724ab (incompatible), mod/hydraulic, mod/neoforge, mod_data
+	Enabled Feature Flags: minecraft:vanilla
+	World Generation: Stable
+	World Seed: -7240144472330307830
+	Suppressed Exceptions: ~~NONE~~
+	Is Modded: Definitely; Server brand changed to 'neoforge'
+	Type: Dedicated Server (map_server.txt)
+	ModLauncher: 9.0
+	ModLauncher launch target: neoforgeserverdev
+	ModLauncher services: 
+		sponge-mixin-0.15.2+mixin.0.8.7.jar mixin PLUGINSERVICE 
+		loader-9.0.16.jar neoforgedevdistcleaner PLUGINSERVICE 
+		loader-9.0.16.jar slf4jfixer PLUGINSERVICE 
+		loader-9.0.16.jar runtime_enum_extender PLUGINSERVICE 
+		unprotect-1.3.1.jar unprotect PLUGINSERVICE 
+		loader-9.0.16.jar accesstransformer PLUGINSERVICE 
+		loader-9.0.16.jar mixin TRANSFORMATIONSERVICE 
+		loader-9.0.16.jar fml TRANSFORMATIONSERVICE 
+	FML Language Providers: 
+		javafml@9.0
+		minecraft@9.0
+	Mod List: 
+		11861085110670343698.jar                          |generated_0f1f137             |generated_0f1f137             |1                   |Manifest: NOSIGNATURE
+		14858580328029861437.jar                          |generated_0ffbe52             |generated_0ffbe52             |1                   |Manifest: NOSIGNATURE
+		10540273361956305011.jar                          |generated_2870cd7             |generated_2870cd7             |1                   |Manifest: NOSIGNATURE
+		14974173033944818449.jar                          |generated_4aa0d9d             |generated_4aa0d9d             |1                   |Manifest: NOSIGNATURE
+		824266961191520619.jar                            |generated_72d8fa8             |generated_72d8fa8             |1                   |Manifest: NOSIGNATURE
+		10896132838076413363.jar                          |generated_74b6d63             |generated_74b6d63             |1                   |Manifest: NOSIGNATURE
+		13780018198297487775.jar                          |generated_7de1529             |generated_7de1529             |1                   |Manifest: NOSIGNATURE
+		4662997369975366960.jar                           |generated_9032933             |generated_9032933             |1                   |Manifest: NOSIGNATURE
+		10134190901434555808.jar                          |generated_a0dea30             |generated_a0dea30             |1                   |Manifest: NOSIGNATURE
+		10627041992343979596.jar                          |generated_a6d4892             |generated_a6d4892             |1                   |Manifest: NOSIGNATURE
+		7191990101885249075.jar                           |generated_aa4c32e             |generated_aa4c32e             |1                   |Manifest: NOSIGNATURE
+		11873805762791730900.jar                          |generated_ad21c5f             |generated_ad21c5f             |1                   |Manifest: NOSIGNATURE
+		4899407511751484719.jar                           |generated_b5eeb18             |generated_b5eeb18             |1                   |Manifest: NOSIGNATURE
+		3456379487329224698.jar                           |generated_da71bf0             |generated_da71bf0             |1                   |Manifest: NOSIGNATURE
+		3240048241488997832.jar                           |generated_dd45b99             |generated_dd45b99             |1                   |Manifest: NOSIGNATURE
+		14064433799674700884.jar                          |generated_de404fa             |generated_de404fa             |1                   |Manifest: NOSIGNATURE
+		14719083349805948151.jar                          |generated_dfa5dc8             |generated_dfa5dc8             |1                   |Manifest: NOSIGNATURE
+		10009853358165947861.jar                          |generated_f0724ab             |generated_f0724ab             |1                   |Manifest: NOSIGNATURE
+		main                                              |Hydraulic                     |hydraulic                     |1.0.0-SNAPSHOT      |Manifest: NOSIGNATURE
+		neoforge-21.8.21-minecraft-merged-1.21.8-loom.mapp|Minecraft                     |minecraft                     |1.21.8              |Manifest: NOSIGNATURE
+		neoforge-21.8.21-minecraft-merged-1.21.8-loom.mapp|NeoForge                      |neoforge                      |21.8.21             |Manifest: NOSIGNATURE
+	Crash Report UUID: 657f84b4-e784-486f-8598-399693e9138f
+	FML: 9.0.16
+	NeoForge: 21.8.21

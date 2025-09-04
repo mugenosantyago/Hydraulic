@@ -13,7 +13,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.UUID;
 
-@AutoService(PackModule.class)
+// Temporarily disabled AutoService to prevent ServiceLoader issues
+// @AutoService(PackModule.class)
 public class MetadataPackModule extends PackModule<MetadataPackModule> {
     public MetadataPackModule() {
         this.postProcess(context -> {

@@ -35,7 +35,8 @@ import team.unnamed.creative.model.ModelTexture;
 
 import java.util.*;
 
-@AutoService(PackModule.class)
+// Temporarily disabled AutoService to prevent ServiceLoader issues
+// @AutoService(PackModule.class)
 public class ItemPackModule extends TexturePackModule<ItemPackModule> {
     private final List<ResourceLocation> itemsWith2dIcon = new ArrayList<>();
     private final List<ResourceLocation> handheldItems = new ArrayList<>();

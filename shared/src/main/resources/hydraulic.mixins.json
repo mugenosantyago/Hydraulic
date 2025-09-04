@@ -5,13 +5,9 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "ext.BlockRegistryPopulatorMixin",
-    "ext.BlockStateSerializerMixin",
-    "ext.ItemSerializerMixin",
     "ext.ItemTranslatorMixin",
-    "ext.MinecraftResourcePackReaderImplMixin",
     "ext.InventoryUtilsMixin",
-    "ext.LocationAwareSlf4JLoggerMixin",
-    "ext.ModelSerializerMixin"
+    "ext.LocationAwareSlf4JLoggerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

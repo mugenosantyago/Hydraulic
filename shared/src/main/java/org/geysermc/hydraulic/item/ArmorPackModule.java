@@ -32,7 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@AutoService(PackModule.class)
+// Temporarily disabled AutoService to prevent ServiceLoader issues
+// @AutoService(PackModule.class)
 public class ArmorPackModule extends PackModule<ArmorPackModule> {
     private static final String BEDROCK_ARMOR_TEXTURE_LOCATION = "textures/entity/%s/equipment/%s/%s";
 
