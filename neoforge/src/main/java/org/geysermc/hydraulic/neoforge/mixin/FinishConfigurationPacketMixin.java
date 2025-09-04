@@ -33,7 +33,7 @@ public class FinishConfigurationPacketMixin {
     )
     private void preventFinishConfigurationPacketForBedrock(
         net.minecraft.network.protocol.Packet<?> packet, 
-        net.minecraft.network.PacketSendListener listener, 
+        io.netty.channel.ChannelFutureListener listener, 
         boolean flush, 
         CallbackInfo ci
     ) {

@@ -257,3 +257,8 @@ gradle-app.setting
 Geyser/
 *.md
 *.gz
+neoforge/run/logs/2025-09-04-1.log.gz
+*.gz
+neoforge/run/logs/2025-09-04-1.log.gz
+neoforge/run/logs/2025-09-04-1.log.gz
+/neoforge/run/logs

@@ -28,6 +28,10 @@ dependencies {
         module("com.google.guava:listenablefuture") {
             replacedBy("com.google.guava:guava", "listenablefuture is part of guava")
         }
+        // Force all fastutil dependencies to use the same version to prevent module conflicts
+        module("it.unimi.dsi:fastutil") {
+            replacedBy("com.nukkitx.fastutil:fastutil-common", "use nukkitx fastutil to avoid conflicts")
+        }
     }
     
     // Exclude only specific conflicting modules to avoid module conflicts
