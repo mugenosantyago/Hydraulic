@@ -55,8 +55,28 @@ public class BedrockLoadingScreenFixMixin {
                         java.util.Queue<net.minecraft.server.network.ConfigurationTask> tasks = 
                             (java.util.Queue<net.minecraft.server.network.ConfigurationTask>) tasksField.get(self);
                         
-                        if (tasks.isEmpty()) {
-                            LOGGER.info("BedrockLoadingScreenFixMixin: No tasks remaining for Bedrock player {}, forcing configuration completion", playerName);
+                        // For Bedrock players, we need to be more aggressive - clear any remaining tasks
+                        if (tasks.isEmpty() || tasks.size() <= 1) {
+                            LOGGER.info("BedrockLoadingScreenFixMixin: {} tasks remaining for Bedrock player {}, forcing configuration completion", tasks.size(), playerName);
+                            
+                            // Clear any remaining tasks for Bedrock players
+                            if (!tasks.isEmpty()) {
+                                LOGGER.info("BedrockLoadingScreenFixMixin: Clearing {} remaining tasks for Bedrock player: {}", tasks.size(), playerName);
+                                tasks.clear();
+                            }
+                            
+                            // Also try to clear any currently running task
+                            try {
+                                java.lang.reflect.Field currentTaskField = ServerConfigurationPacketListenerImpl.class.getDeclaredField("currentTask");
+                                currentTaskField.setAccessible(true);
+                                Object currentTask = currentTaskField.get(self);
+                                if (currentTask != null) {
+                                    LOGGER.info("BedrockLoadingScreenFixMixin: Clearing current task for Bedrock player: {}", playerName);
+                                    currentTaskField.set(self, null);
+                                }
+                            } catch (Exception taskException) {
+                                LOGGER.debug("BedrockLoadingScreenFixMixin: Could not clear current task for {}: {}", playerName, taskException.getMessage());
+                            }
                             
                             // Mark as processed
                             processedPlayers.add(playerName);
