@@ -1,6 +1,9 @@
 package org.geysermc.hydraulic.neoforge.mixin;
 
 import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.players.PlayerList;
 import org.geysermc.hydraulic.neoforge.util.BedrockDetectionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,8 +13,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * This mixin ensures Bedrock players properly finish configuration by
- * sending the required finish configuration packet on their behalf.
+ * This mixin ensures Bedrock players properly finish configuration and
+ * are spawned into the world correctly.
  */
 @Mixin(value = ServerConfigurationPacketListenerImpl.class, priority = 1500)
 public class BedrockConfigurationFinishMixin {
@@ -22,12 +25,11 @@ public class BedrockConfigurationFinishMixin {
 
     /**
      * When startNextTask is called and there are no tasks for Bedrock players,
-     * we need to send the finish configuration packet on their behalf.
+     * we need to immediately transition them to the play phase.
      */
     @Inject(
         method = "startNextTask",
-        at = @At("HEAD"),
-        cancellable = true
+        at = @At("HEAD")
     )
     private void handleBedrockConfigurationFinish(CallbackInfo ci) {
         try {
@@ -54,41 +56,35 @@ public class BedrockConfigurationFinishMixin {
                             (java.util.Queue<net.minecraft.server.network.ConfigurationTask>) tasksField.get(self);
                         
                         if (tasks.isEmpty()) {
-                            LOGGER.info("BedrockConfigurationFinishMixin: No tasks remaining for Bedrock player {}, sending finish configuration", 
+                            LOGGER.info("BedrockConfigurationFinishMixin: No tasks remaining for Bedrock player {}, immediately transitioning to world", 
                                 playerName);
                             
                             // Mark this player as handled to prevent duplicate processing
                             handledPlayers.add(playerName);
                             
-                            // Don't cancel the original flow - let it try to complete naturally first
-                            // This ensures all dimension data and mod initialization happens properly
-                            LOGGER.info("BedrockConfigurationFinishMixin: Allowing natural flow, will use returnToWorld as fallback for: {}", playerName);
-                            
-                            // Schedule returnToWorld as a fallback in case the natural flow gets stuck
-                            java.util.concurrent.CompletableFuture.runAsync(() -> {
-                                try {
-                                    // Wait longer to let the natural configuration process attempt to complete
-                                    // This gives time for Good Night's Sleep dimensions and other mod data to initialize
-                                    Thread.sleep(5000); // 5 second delay to ensure all mods are fully initialized
-                                    
-                                    LOGGER.info("BedrockConfigurationFinishMixin: Fallback timer expired, calling returnToWorld for: {}", playerName);
-                                    
-                                    // Try to call returnToWorld method as fallback
-                                    java.lang.reflect.Method returnToWorldMethod = 
-                                        ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("returnToWorld");
-                                    returnToWorldMethod.setAccessible(true);
-                                    returnToWorldMethod.invoke(self);
-                                    
-                                    LOGGER.info("BedrockConfigurationFinishMixin: Successfully called fallback returnToWorld for: {}", playerName);
-                                    
-                                } catch (Exception returnException) {
-                                    LOGGER.error("BedrockConfigurationFinishMixin: Fallback returnToWorld failed for {}: {}", 
-                                        playerName, returnException.getMessage());
-                                }
-                            });
-                            
-                            // Don't cancel - let the original startNextTask run to allow natural completion
-                            return;
+                            // Immediately attempt to complete configuration and spawn player
+                            try {
+                                // First, try to send the finish configuration packet
+                                Class<?> packetClass = Class.forName("net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket");
+                                Object finishPacket = packetClass.getDeclaredConstructor().newInstance();
+                                
+                                java.lang.reflect.Method handleFinishMethod = 
+                                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("handleConfigurationFinished", packetClass);
+                                handleFinishMethod.setAccessible(true);
+                                handleFinishMethod.invoke(self, finishPacket);
+                                
+                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully sent finish configuration packet for: {}", playerName);
+                                
+                                // After sending the finish packet, ensure the player transitions to the world
+                                forcePlayerWorldTransition(self, playerName);
+                                
+                            } catch (Exception finishException) {
+                                LOGGER.warn("BedrockConfigurationFinishMixin: Failed to send finish packet, trying direct transition: {}", 
+                                    finishException.getMessage());
+                                
+                                // If the packet approach fails, try direct transition
+                                forcePlayerWorldTransition(self, playerName);
+                            }
                         }
                     } catch (Exception reflectionException) {
                         LOGGER.debug("BedrockConfigurationFinishMixin: Could not access task queue: {}", reflectionException.getMessage());
@@ -97,6 +93,84 @@ public class BedrockConfigurationFinishMixin {
             }
         } catch (Exception e) {
             LOGGER.debug("BedrockConfigurationFinishMixin: Exception in configuration finish: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * Forces the player to transition to the world by calling necessary methods.
+     */
+    private void forcePlayerWorldTransition(ServerConfigurationPacketListenerImpl listener, String playerName) {
+        try {
+            // Method 1: Try returnToWorld
+            try {
+                java.lang.reflect.Method returnToWorldMethod = 
+                    ServerConfigurationPacketListenerImpl.class.getDeclaredMethod("returnToWorld");
+                returnToWorldMethod.setAccessible(true);
+                returnToWorldMethod.invoke(listener);
+                LOGGER.info("BedrockConfigurationFinishMixin: Successfully called returnToWorld for: {}", playerName);
+            } catch (Exception returnException) {
+                LOGGER.debug("BedrockConfigurationFinishMixin: returnToWorld failed: {}", returnException.getMessage());
+            }
+            
+            // Method 2: Try to manually transition to play state
+            try {
+                // Get the connection
+                java.lang.reflect.Field connectionField = listener.getClass().getSuperclass().getDeclaredField("connection");
+                connectionField.setAccessible(true);
+                Object connection = connectionField.get(listener);
+                
+                // Get the server
+                java.lang.reflect.Method getServerMethod = listener.getClass().getMethod("getServer");
+                MinecraftServer server = (MinecraftServer) getServerMethod.invoke(listener);
+                
+                // Try to get the player
+                ServerPlayer player = server.getPlayerList().getPlayer(listener.getOwner().getId());
+                if (player != null) {
+                    LOGGER.info("BedrockConfigurationFinishMixin: Found player object, attempting to spawn in world");
+                    
+                    // Force the player to be added to the world if not already
+                    if (!player.hasDisconnected()) {
+                        server.execute(() -> {
+                            try {
+                                // Ensure player is in the correct world
+                                if (player.getLevel() == null) {
+                                    LOGGER.warn("BedrockConfigurationFinishMixin: Player has no level, attempting to set default world");
+                                    player.setLevel(server.overworld());
+                                }
+                                
+                                // Send necessary packets to complete the join process
+                                PlayerList playerList = server.getPlayerList();
+                                playerList.sendLevelInfo(player, player.getLevel());
+                                playerList.sendPlayerPermissionLevel(player);
+                                
+                                // Teleport player to spawn if needed
+                                if (player.getX() == 0 && player.getY() == 0 && player.getZ() == 0) {
+                                    player.teleportTo(
+                                        player.getLevel(),
+                                        player.getLevel().getSharedSpawnPos().getX() + 0.5,
+                                        player.getLevel().getSharedSpawnPos().getY(),
+                                        player.getLevel().getSharedSpawnPos().getZ() + 0.5,
+                                        0, 0
+                                    );
+                                }
+                                
+                                LOGGER.info("BedrockConfigurationFinishMixin: Successfully spawned Bedrock player {} in world", playerName);
+                            } catch (Exception spawnException) {
+                                LOGGER.error("BedrockConfigurationFinishMixin: Failed to spawn player in world: {}", 
+                                    spawnException.getMessage());
+                            }
+                        });
+                    }
+                } else {
+                    LOGGER.warn("BedrockConfigurationFinishMixin: Could not find player object for: {}", playerName);
+                }
+            } catch (Exception playException) {
+                LOGGER.debug("BedrockConfigurationFinishMixin: Manual play transition failed: {}", playException.getMessage());
+            }
+            
+        } catch (Exception e) {
+            LOGGER.error("BedrockConfigurationFinishMixin: Failed to force world transition for {}: {}", 
+                playerName, e.getMessage());
         }
     }
     
