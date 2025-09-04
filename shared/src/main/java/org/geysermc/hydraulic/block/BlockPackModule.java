@@ -71,8 +71,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 
-// Temporarily disabled AutoService to prevent ServiceLoader issues when Geyser is not available
-// @AutoService(PackModule.class)
+@AutoService(PackModule.class)
 public class BlockPackModule extends ConvertablePackModule<BlockPackModule, ModelConversionData> {
     private static final String STATE_CONDITION = "query.block_property('%s') == %s";
 

@@ -27,8 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// Temporarily disabled AutoService to prevent ServiceLoader issues
-// @AutoService(PackModule.class)
+@AutoService(PackModule.class)
 public class BowPackModule extends TexturePackModule<BowPackModule> {
     private static final Map<String, String> ATTACHABLE_MATERIALS = new HashMap<>() {
         {

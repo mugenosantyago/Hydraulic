@@ -30,9 +30,14 @@ dependencies {
         }
     }
     
-    // Exclude error_prone_annotations to avoid module conflicts
+    // Exclude conflicting dependencies to avoid module conflicts
     configurations.all {
         exclude(group = "com.google.errorprone", module = "error_prone_annotations")
+        exclude(group = "it.unimi.dsi", module = "fastutil")
+        exclude(group = "com.nukkitx.fastutil")
+        exclude(group = "commons-io", module = "commons-io")
+        exclude(group = "com.google.code.gson", module = "gson")
+        exclude(group = "org.jetbrains", module = "annotations")
     }
 
     common(project(":shared", configuration = "namedElements")) { isTransitive = false }
@@ -42,29 +47,11 @@ dependencies {
     shadow(project(path = ":shared", configuration = "transformProductionNeoForge")) { isTransitive = false }
 
     // TODO fix neoforge runServer task
-    modRuntimeOnly(libs.pack.converter) {
-        exclude(group = "com.google.errorprone", module = "error_prone_annotations")
-        exclude(group = "it.unimi.dsi", module = "fastutil")
-        exclude(group = "com.nukkitx.fastutil")
-        exclude(group = "commons-io", module = "commons-io")
-        exclude(group = "com.google.code.gson", module = "gson")
-    }
-    includeTransitive(libs.pack.converter) {
-        exclude(group = "com.google.errorprone", module = "error_prone_annotations")
-        exclude(group = "it.unimi.dsi", module = "fastutil")
-        exclude(group = "com.nukkitx.fastutil")
-        exclude(group = "commons-io", module = "commons-io")
-        exclude(group = "com.google.code.gson", module = "gson")
-    }
+    modRuntimeOnly(libs.pack.converter)
+    includeTransitive(libs.pack.converter)
     
     // Add pack-converter to development runtime to fix LogListener ClassNotFoundException
-    developmentNeoForge(libs.pack.converter) {
-        exclude(group = "com.google.errorprone", module = "error_prone_annotations")
-        exclude(group = "it.unimi.dsi", module = "fastutil")
-        exclude(group = "com.nukkitx.fastutil")
-        exclude(group = "commons-io", module = "commons-io")
-        exclude(group = "com.google.code.gson", module = "gson")
-    }
+    developmentNeoForge(libs.pack.converter)
 }
 
 tasks {

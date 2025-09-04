@@ -2,6 +2,15 @@ architectury {
     common("neoforge", "fabric")
 }
 
+// Global exclusions to prevent module conflicts
+configurations.all {
+    exclude(group = "com.google.errorprone", module = "error_prone_annotations")
+    exclude(group = "it.unimi.dsi", module = "fastutil")
+    exclude(group = "com.nukkitx.fastutil")
+    exclude(group = "commons-io", module = "commons-io")
+    exclude(group = "com.google.code.gson", module = "gson")
+}
+
 dependencies {
     compileOnly(libs.mixin)
     compileOnly(libs.mixinextras)
@@ -11,13 +20,7 @@ dependencies {
         exclude(group = "io.netty.incubator")
     }
 
-    api(libs.pack.converter) {
-        exclude(group = "com.google.errorprone", module = "error_prone_annotations")
-        exclude(group = "it.unimi.dsi", module = "fastutil")
-        exclude(group = "com.nukkitx.fastutil")
-        exclude(group = "commons-io", module = "commons-io")
-        exclude(group = "com.google.code.gson", module = "gson")
-    }
+    api(libs.pack.converter)
 
     implementation(libs.auto.service)
     annotationProcessor(libs.auto.service)

@@ -10,6 +10,6 @@
     "ext.LocationAwareSlf4JLoggerMixin"
   ],
   "injectors": {
-    "defaultRequire": 1
+    "defaultRequire": 0
   }
 }
