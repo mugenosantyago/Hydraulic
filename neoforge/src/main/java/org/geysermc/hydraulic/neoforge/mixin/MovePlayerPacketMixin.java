@@ -39,6 +39,8 @@ public class MovePlayerPacketMixin {
                 boolean isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);
                 
                 if (isBedrockPlayer) {
+                    LOGGER.debug("MovePlayerPacketMixin: Processing move packet for Bedrock player: {}", playerName);
+                    
                     // For Bedrock players, we need to be more lenient with movement validation
                     // Check for obviously invalid values that would cause issues
                     boolean hasValidPosition = true;
@@ -58,16 +60,16 @@ public class MovePlayerPacketMixin {
                                 playerName, x, y, z);
                         }
                         
-                        // Check for extremely large movement (possible teleport hack, but be more lenient for Bedrock)
+                        // Check for extremely large movement (possible teleport hack, but be very lenient for Bedrock)
                         double deltaX = Math.abs(x - player.getX());
                         double deltaY = Math.abs(y - player.getY());
                         double deltaZ = Math.abs(z - player.getZ());
-                        double maxDelta = 100.0; // More lenient than Java Edition's usual ~10 block limit
+                        double maxDelta = 1000.0; // Very lenient for Bedrock players - allow teleports and Geyser quirks
                         
                         if (deltaX > maxDelta || deltaY > maxDelta || deltaZ > maxDelta) {
-                            LOGGER.debug("MovePlayerPacketMixin: Large movement detected for Bedrock player {}: dx={}, dy={}, dz={}", 
+                            LOGGER.debug("MovePlayerPacketMixin: Very large movement detected for Bedrock player {}: dx={}, dy={}, dz={}", 
                                 playerName, deltaX, deltaY, deltaZ);
-                            // Don't reject large movements for Bedrock players as Geyser might cause legitimate large movements
+                            // Still don't reject - just log for debugging
                         }
                     } catch (Exception e) {
                         // If we can't get position data, assume it's not a position packet
@@ -101,6 +103,9 @@ public class MovePlayerPacketMixin {
                     
                     // For valid packets from Bedrock players, let them through with debug logging
                     LOGGER.debug("MovePlayerPacketMixin: Processing valid move packet for Bedrock player {}", playerName);
+                } else {
+                    // For non-Bedrock players, add some debug logging too
+                    LOGGER.debug("MovePlayerPacketMixin: Processing move packet for Java player: {}", playerName);
                 }
             }
         } catch (Exception e) {
@@ -128,6 +133,49 @@ public class MovePlayerPacketMixin {
                 if (isBedrockPlayer) {
                     LOGGER.info("MovePlayerPacketMixin: Preventing disconnect for Bedrock player {} due to move player validation", 
                         playerName);
+                    ci.cancel(); // Prevent the disconnect
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.debug("MovePlayerPacketMixin: Exception in disconnect prevention: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * Broader disconnect prevention that catches all disconnect attempts in the game packet listener.
+     * This is a safety net to catch any move player related disconnects we might have missed.
+     */
+    @Inject(
+        method = "disconnect(Lnet/minecraft/network/chat/Component;)V",
+        at = @At("HEAD"),
+        cancellable = true
+    )
+    private void preventInvalidMovePlayerDisconnect(net.minecraft.network.chat.Component reason, CallbackInfo ci) {
+        try {
+            if (player != null && reason != null) {
+                String disconnectMessage = reason.getString();
+                String playerName = player.getGameProfile().getName();
+                boolean isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);
+                
+                // Specifically check for the "Invalid move player packet received" message
+                if (isBedrockPlayer && 
+                    (disconnectMessage.contains("Invalid move player packet received") ||
+                     disconnectMessage.contains("multiplayer.disconnect.invalid_player_movement"))) {
+                    
+                    LOGGER.info("MovePlayerPacketMixin: Preventing 'Invalid move player packet received' disconnect for Bedrock player: {}", 
+                        playerName);
+                    ci.cancel(); // Prevent the disconnect
+                    return;
+                }
+                
+                // Also catch any other movement-related disconnects
+                if (isBedrockPlayer && 
+                    (disconnectMessage.toLowerCase().contains("move") || 
+                     disconnectMessage.toLowerCase().contains("position") ||
+                     disconnectMessage.toLowerCase().contains("movement"))) {
+                    
+                    LOGGER.info("MovePlayerPacketMixin: Preventing movement-related disconnect for Bedrock player: {} (Message: {})", 
+                        playerName, disconnectMessage);
                     ci.cancel(); // Prevent the disconnect
                 }
             }
