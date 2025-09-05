@@ -39,6 +39,9 @@ public class MovePlayerPacketMixin {
                 boolean isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);
                 
                 if (isBedrockPlayer) {
+                    LOGGER.info("MovePlayerPacketMixin: Handling move player packet for Bedrock player: {} (Packet: {})", 
+                        playerName, packet.getClass().getSimpleName());
+                    
                     // For Bedrock players, we need to be more lenient with movement validation
                     // Check for obviously invalid values that would cause issues
                     boolean hasValidPosition = true;
@@ -50,11 +53,14 @@ public class MovePlayerPacketMixin {
                         double y = packet.getY(player.getY());
                         double z = packet.getZ(player.getZ());
                         
+                        LOGGER.debug("MovePlayerPacketMixin: Position data for {}: x={}, y={}, z={} (current: {}, {}, {})", 
+                            playerName, x, y, z, player.getX(), player.getY(), player.getZ());
+                        
                         // Check for NaN or infinite values
                         if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z) ||
                             Double.isInfinite(x) || Double.isInfinite(y) || Double.isInfinite(z)) {
                             hasValidPosition = false;
-                            LOGGER.debug("MovePlayerPacketMixin: Invalid position values for Bedrock player {}: x={}, y={}, z={}", 
+                            LOGGER.warn("MovePlayerPacketMixin: Invalid position values for Bedrock player {}: x={}, y={}, z={}", 
                                 playerName, x, y, z);
                         }
                         
@@ -65,13 +71,13 @@ public class MovePlayerPacketMixin {
                         double maxDelta = 100.0; // More lenient than Java Edition's usual ~10 block limit
                         
                         if (deltaX > maxDelta || deltaY > maxDelta || deltaZ > maxDelta) {
-                            LOGGER.debug("MovePlayerPacketMixin: Large movement detected for Bedrock player {}: dx={}, dy={}, dz={}", 
+                            LOGGER.warn("MovePlayerPacketMixin: Large movement detected for Bedrock player {}: dx={}, dy={}, dz={} - allowing due to Bedrock compatibility", 
                                 playerName, deltaX, deltaY, deltaZ);
                             // Don't reject large movements for Bedrock players as Geyser might cause legitimate large movements
                         }
                     } catch (Exception e) {
                         // If we can't get position data, assume it's not a position packet
-                        LOGGER.debug("MovePlayerPacketMixin: No position data in packet for {}", playerName);
+                        LOGGER.debug("MovePlayerPacketMixin: No position data in packet for {}: {}", playerName, e.getMessage());
                     }
                     
                     // Check if packet contains rotation data
@@ -79,16 +85,19 @@ public class MovePlayerPacketMixin {
                         float yRot = packet.getYRot(player.getYRot());
                         float xRot = packet.getXRot(player.getXRot());
                         
+                        LOGGER.debug("MovePlayerPacketMixin: Rotation data for {}: yRot={}, xRot={} (current: {}, {})", 
+                            playerName, yRot, xRot, player.getYRot(), player.getXRot());
+                        
                         // Check for NaN or infinite rotation values
                         if (Float.isNaN(yRot) || Float.isNaN(xRot) ||
                             Float.isInfinite(yRot) || Float.isInfinite(xRot)) {
                             hasValidRotation = false;
-                            LOGGER.debug("MovePlayerPacketMixin: Invalid rotation values for Bedrock player {}: yRot={}, xRot={}", 
+                            LOGGER.warn("MovePlayerPacketMixin: Invalid rotation values for Bedrock player {}: yRot={}, xRot={}", 
                                 playerName, yRot, xRot);
                         }
                     } catch (Exception e) {
                         // If we can't get rotation data, assume it's not a rotation packet
-                        LOGGER.debug("MovePlayerPacketMixin: No rotation data in packet for {}", playerName);
+                        LOGGER.debug("MovePlayerPacketMixin: No rotation data in packet for {}: {}", playerName, e.getMessage());
                     }
                     
                     // If the packet has invalid values, ignore it instead of disconnecting
@@ -100,12 +109,17 @@ public class MovePlayerPacketMixin {
                     }
                     
                     // For valid packets from Bedrock players, let them through with debug logging
-                    LOGGER.debug("MovePlayerPacketMixin: Processing valid move packet for Bedrock player {}", playerName);
+                    LOGGER.info("MovePlayerPacketMixin: Processing valid move packet for Bedrock player {}", playerName);
                 }
             }
         } catch (Exception e) {
-            LOGGER.debug("MovePlayerPacketMixin: Exception in move player packet handling: {}", e.getMessage());
-            // Don't cancel on exceptions, let the original method handle it
+            LOGGER.error("MovePlayerPacketMixin: Exception in move player packet handling: {}", e.getMessage(), e);
+            // For Bedrock players, cancel on exceptions to prevent crashes
+            if (player != null && BedrockDetectionHelper.isFloodgatePlayer(player.getGameProfile().getName())) {
+                LOGGER.info("MovePlayerPacketMixin: Cancelling packet processing for Bedrock player due to exception");
+                ci.cancel();
+                return;
+            }
         }
         
         // Continue with normal processing if we haven't cancelled
@@ -154,22 +168,22 @@ public class MovePlayerPacketMixin {
                 if (isBedrockPlayer) {
                     String reasonText = reason != null ? reason.getString() : "unknown";
                     
-                    // Check if this is a move player validation disconnect
-                    if (reasonText.toLowerCase().contains("invalid") && 
-                        (reasonText.toLowerCase().contains("move") || reasonText.toLowerCase().contains("player"))) {
-                        
-                        LOGGER.info("MovePlayerPacketMixin: Preventing move player validation disconnect for Bedrock player {}: {}", 
-                            playerName, reasonText);
-                        ci.cancel(); // Prevent the disconnect
-                        return;
-                    }
-                    
-                    // Also prevent disconnects for other movement-related validation issues
-                    if (reasonText.toLowerCase().contains("movement") || 
+                    // Be very aggressive about preventing disconnects for Bedrock players
+                    if (reasonText.toLowerCase().contains("invalid") || 
+                        reasonText.toLowerCase().contains("move") || 
+                        reasonText.toLowerCase().contains("player") ||
+                        reasonText.toLowerCase().contains("movement") || 
                         reasonText.toLowerCase().contains("position") ||
-                        reasonText.toLowerCase().contains("teleport")) {
+                        reasonText.toLowerCase().contains("teleport") ||
+                        reasonText.toLowerCase().contains("packet") ||
+                        reasonText.toLowerCase().contains("flying") ||
+                        reasonText.toLowerCase().contains("speed") ||
+                        reasonText.toLowerCase().contains("hack") ||
+                        reasonText.toLowerCase().contains("cheat") ||
+                        reasonText.toLowerCase().contains("validation") ||
+                        reasonText.equals("disconnected")) { // Generic disconnect
                         
-                        LOGGER.info("MovePlayerPacketMixin: Preventing movement-related disconnect for Bedrock player {}: {}", 
+                        LOGGER.info("MovePlayerPacketMixin: AGGRESSIVELY preventing disconnect for Bedrock player {}: {}", 
                             playerName, reasonText);
                         ci.cancel(); // Prevent the disconnect
                         return;
