@@ -96,15 +96,26 @@ public class GeyserSpawnPacketFix {
                             LOGGER.info("GeyserSpawnPacketFix: Available methods: {}", 
                                 java.util.Arrays.stream(methods).map(m -> m.getName()).toArray());
                             
-                            java.lang.reflect.Method getDownstreamSessionMethod = connection.getClass().getMethod("downstream");
-                            Object downstreamSession = getDownstreamSessionMethod.invoke(connection);
-                            
-                            LOGGER.info("GeyserSpawnPacketFix: Downstream session result: {}", downstreamSession != null ? downstreamSession.getClass().getName() : "null");
-                            
-                            if (downstreamSession != null) {
-                                LOGGER.info("GeyserSpawnPacketFix: Successfully accessed downstream session for: {}", playerName);
-                                // Force the spawn packet to be sent
-                                forceSpawnPacketSending(downstreamSession, playerName);
+                            // Check if this is already a GeyserSession (which IS the downstream session)
+                            if (connection.getClass().getName().contains("GeyserSession")) {
+                                LOGGER.info("GeyserSpawnPacketFix: Connection is already a GeyserSession, using it directly for: {}", playerName);
+                                // Use the GeyserSession directly as the downstream session
+                                forceSpawnPacketSending(connection, playerName);
+                            } else {
+                                // Try the original downstream method approach
+                                java.lang.reflect.Method getDownstreamSessionMethod = connection.getClass().getMethod("downstream");
+                                Object downstreamSession = getDownstreamSessionMethod.invoke(connection);
+                                
+                                LOGGER.info("GeyserSpawnPacketFix: Downstream session result: {}", downstreamSession != null ? downstreamSession.getClass().getName() : "null");
+                                
+                                if (downstreamSession != null) {
+                                    LOGGER.info("GeyserSpawnPacketFix: Successfully accessed downstream session for: {}", playerName);
+                                    // Force the spawn packet to be sent
+                                    forceSpawnPacketSending(downstreamSession, playerName);
+                                } else {
+                                    LOGGER.warn("GeyserSpawnPacketFix: Downstream session is null for: {}", playerName);
+                                }
+                            }
                                 
                                 // Also try to access the upstream session (Java server)
                                 try {
