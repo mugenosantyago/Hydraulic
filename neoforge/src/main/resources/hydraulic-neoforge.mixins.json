@@ -25,7 +25,8 @@
     "PacketErrorHandlerMixin",
     "NeoForgeVersionSpecificMixin",
     "BedrockSpawnSequenceMixin",
-    "GeyserSpawnStateMixin"
+    "GeyserSpawnStateMixin",
+    "GeyserSessionSyncMixin"
   ],
   "injectors": {
     "defaultRequire": 0
