@@ -55,22 +55,17 @@ public class BedrockLoadingScreenCompletionMixin {
                 server.execute(() -> {
                     try {
                         // Multiple attempts with increasing delays
-                        for (int attempt = 1; attempt <= 5; attempt++) {
+                        for (int attempt = 1; attempt <= 3; attempt++) {
                             final int currentAttempt = attempt;
                             
                             java.util.concurrent.Executors.newSingleThreadScheduledExecutor().schedule(() -> {
                                 try {
                                     forceLoadingScreenComplete(player, server, currentAttempt);
-                                    
-                                    // On the last attempt, try a more aggressive approach
-                                    if (currentAttempt == 5) {
-                                        forceUltimateLoadingScreenCompletion(player);
-                                    }
                                 } catch (Exception e) {
                                     LOGGER.error("BedrockLoadingScreenCompletionMixin: Exception in attempt {} for {}: {}", 
                                         currentAttempt, playerName, e.getMessage());
                                 }
-                            }, attempt * 300L, java.util.concurrent.TimeUnit.MILLISECONDS);
+                            }, attempt * 500L, java.util.concurrent.TimeUnit.MILLISECONDS);
                         }
                     } catch (Exception e) {
                         LOGGER.error("BedrockLoadingScreenCompletionMixin: Exception scheduling completion for {}: {}", 
@@ -294,92 +289,6 @@ public class BedrockLoadingScreenCompletionMixin {
             
         } catch (Exception e) {
             LOGGER.debug("BedrockLoadingScreenCompletionMixin: Exception setting Geyser flags: {}", e.getMessage());
-        }
-    }
-    
-    /**
-     * Ultimate loading screen completion attempt - forces everything.
-     */
-    private void forceUltimateLoadingScreenCompletion(ServerPlayer player) {
-        try {
-            String playerName = player.getGameProfile().getName();
-            LOGGER.warn("BedrockLoadingScreenCompletionMixin: ULTIMATE LOADING SCREEN COMPLETION for: {}", playerName);
-            
-            if (player.connection == null || !player.connection.getConnection().isConnected()) {
-                LOGGER.warn("BedrockLoadingScreenCompletionMixin: Player {} no longer connected for ultimate fix", playerName);
-                return;
-            }
-            
-            // If player is dead, force them to be alive
-            if (player.isDeadOrDying()) {
-                LOGGER.warn("BedrockLoadingScreenCompletionMixin: FORCING PLAYER {} TO BE ALIVE", playerName);
-                
-                // Set health to full
-                player.setHealth(player.getMaxHealth());
-                
-                // Clear any death-related effects
-                player.clearFire();
-                player.setAirSupply(player.getMaxAirSupply());
-                
-                // Force position to world spawn
-                ServerLevel level = player.level() instanceof ServerLevel ? (ServerLevel) player.level() : null;
-                if (level != null) {
-                    BlockPos worldSpawn = level.getSharedSpawnPos();
-                    double spawnX = worldSpawn.getX() + 0.5;
-                    double spawnY = worldSpawn.getY() + 2.0; // Well above ground
-                    double spawnZ = worldSpawn.getZ() + 0.5;
-                    
-                    player.teleportTo(spawnX, spawnY, spawnZ);
-                    
-                    LOGGER.warn("BedrockLoadingScreenCompletionMixin: TELEPORTED {} TO SAFE SPAWN ({}, {}, {})", 
-                        playerName, spawnX, spawnY, spawnZ);
-                }
-            }
-            
-            // Send comprehensive state reset packets
-            if (player.connection != null) {
-                // Health packet
-                player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetHealthPacket(
-                    player.getHealth(), player.getFoodData().getFoodLevel(), player.getFoodData().getSaturationLevel()));
-                
-                // Position packet
-                player.connection.teleport(player.getX(), player.getY(), player.getZ(), 0.0F, 0.0F);
-                
-                // Abilities packet
-                player.connection.send(new net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket(player.getAbilities()));
-                
-                // Game mode packet
-                player.connection.send(new net.minecraft.network.protocol.game.ClientboundGameEventPacket(
-                    net.minecraft.network.protocol.game.ClientboundGameEventPacket.CHANGE_GAME_MODE, 
-                    player.gameMode.getGameModeForPlayer().getId()));
-                
-                // Multiple loading completion signals
-                player.connection.send(new net.minecraft.network.protocol.game.ClientboundGameEventPacket(
-                    net.minecraft.network.protocol.game.ClientboundGameEventPacket.LEVEL_CHUNKS_LOAD_START, 0.0F));
-                
-                player.connection.send(new net.minecraft.network.protocol.game.ClientboundGameEventPacket(
-                    net.minecraft.network.protocol.game.ClientboundGameEventPacket.STOP_RAINING, 0.0F));
-                
-                // Time update
-                long worldTime = player.level().getGameTime();
-                long dayTime = player.level().getDayTime();
-                player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTimePacket(worldTime, dayTime, true));
-                
-                // Force multiple flushes
-                for (int i = 0; i < 3; i++) {
-                    player.connection.getConnection().flushChannel();
-                }
-                
-                LOGGER.warn("BedrockLoadingScreenCompletionMixin: SENT ULTIMATE COMPLETION PACKETS for: {}", playerName);
-            }
-            
-            // Force Geyser flags one more time
-            forceGeyserLoadingCompletion(player);
-            
-            LOGGER.warn("BedrockLoadingScreenCompletionMixin: ULTIMATE COMPLETION ATTEMPT FINISHED for: {}", playerName);
-            
-        } catch (Exception e) {
-            LOGGER.error("BedrockLoadingScreenCompletionMixin: Exception in ultimate completion: {}", e.getMessage());
         }
     }
     
