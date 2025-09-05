@@ -109,7 +109,7 @@ public class MovePlayerPacketMixin {
                     }
                     
                     // For valid packets from Bedrock players, let them through with debug logging
-                    LOGGER.debug("MovePlayerPacketMixin: Processing valid move packet for Bedrock player {}", playerName);
+                    LOGGER.info("MovePlayerPacketMixin: Processing valid move packet for Bedrock player {}", playerName);
                 }
             }
         } catch (Exception e) {
@@ -168,6 +168,9 @@ public class MovePlayerPacketMixin {
                 if (isBedrockPlayer) {
                     String reasonText = reason != null ? reason.getString() : "unknown";
                     
+                    // Log ALL disconnect attempts for debugging
+                    LOGGER.info("MovePlayerPacketMixin: Disconnect attempt for Bedrock player {}: '{}'", playerName, reasonText);
+                    
                     // Only prevent specific move player validation disconnects
                     String lowerReasonText = reasonText.toLowerCase();
                     if ((lowerReasonText.contains("invalid") && 
@@ -176,9 +179,16 @@ public class MovePlayerPacketMixin {
                         lowerReasonText.contains("invalid move player packet received") ||
                         reasonText.contains("multiplayer.disconnect.invalid_player_movement")) {
                         
-                        LOGGER.info("MovePlayerPacketMixin: Preventing move player validation disconnect for Bedrock player {}: {}", 
+                        LOGGER.info("MovePlayerPacketMixin: PREVENTED move player validation disconnect for Bedrock player {}: {}", 
                             playerName, reasonText);
                         ci.cancel(); // Prevent the disconnect
+                        return;
+                    }
+                    
+                    // Also prevent generic "Disconnected" that might be masking move player errors
+                    if (lowerReasonText.equals("disconnected") || reasonText.trim().isEmpty()) {
+                        LOGGER.info("MovePlayerPacketMixin: PREVENTED generic disconnect for Bedrock player: {} (might be masking move player error)", playerName);
+                        ci.cancel(); // Prevent generic disconnects
                         return;
                     }
                 }
