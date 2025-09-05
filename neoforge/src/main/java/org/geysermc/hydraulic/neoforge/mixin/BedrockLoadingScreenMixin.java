@@ -35,37 +35,22 @@ public class BedrockLoadingScreenMixin {
                 String playerName = player.getGameProfile().getName();
                 LOGGER.info("BedrockLoadingScreenMixin: Forcing loading screen exit sequence for: {}", playerName);
                 
-                // Schedule immediate and delayed attempts to force loading screen exit
+                // Schedule more conservative attempts that won't interfere with skin loading
                 var serverInstance = player.getServer();
                 if (serverInstance != null) {
-                    // Immediate attempt
-                    serverInstance.execute(() -> {
-                        sendLoadingScreenExitPackets(player, "immediate");
-                    });
-                    
-                    // Delayed attempts with increasing delays
                     java.util.concurrent.ScheduledExecutorService executor = java.util.concurrent.Executors.newSingleThreadScheduledExecutor();
                     
-                    // 250ms delay
+                    // Wait longer to allow skin loading to complete first
+                    // 1500ms delay - after skin should be loaded
                     executor.schedule(() -> {
-                        sendLoadingScreenExitPackets(player, "250ms");
-                    }, 250, java.util.concurrent.TimeUnit.MILLISECONDS);
+                        sendLoadingScreenExitPackets(player, "1500ms");
+                    }, 1500, java.util.concurrent.TimeUnit.MILLISECONDS);
                     
-                    // 500ms delay
+                    // 3000ms delay - final attempt if still stuck
                     executor.schedule(() -> {
-                        sendLoadingScreenExitPackets(player, "500ms");
-                    }, 500, java.util.concurrent.TimeUnit.MILLISECONDS);
-                    
-                    // 1000ms delay
-                    executor.schedule(() -> {
-                        sendLoadingScreenExitPackets(player, "1000ms");
-                    }, 1000, java.util.concurrent.TimeUnit.MILLISECONDS);
-                    
-                    // 2000ms delay - final attempt
-                    executor.schedule(() -> {
-                        sendLoadingScreenExitPackets(player, "2000ms-final");
+                        sendLoadingScreenExitPackets(player, "3000ms-final");
                         executor.shutdown();
-                    }, 2000, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    }, 3000, java.util.concurrent.TimeUnit.MILLISECONDS);
                 }
             }
         } catch (Exception e) {
@@ -85,50 +70,23 @@ public class BedrockLoadingScreenMixin {
             String playerName = player.getGameProfile().getName();
             LOGGER.info("BedrockLoadingScreenMixin: Sending loading screen exit packets for {} ({})", playerName, attempt);
             
-            // Critical packet sequence for Bedrock loading screen exit
+            // More conservative packet sequence that won't interfere with skin loading
             try {
-                // 1. Send player abilities (critical for client state)
-                player.connection.send(new net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket(player.getAbilities()));
+                // Only send the most critical packets for loading screen exit
                 
-                // 2. Send level chunks load start event
+                // 1. Send level chunks load start event (critical for loading screen)
                 player.connection.send(new net.minecraft.network.protocol.game.ClientboundGameEventPacket(
                     net.minecraft.network.protocol.game.ClientboundGameEventPacket.LEVEL_CHUNKS_LOAD_START, 0.0F));
                 
-                // 3. Force position sync
+                // 2. Send position sync (let client know where they are)
                 player.connection.teleport(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
                 
-                // 4. Send game mode confirmation
+                // 3. Send game mode (critical for client state)
                 player.connection.send(new net.minecraft.network.protocol.game.ClientboundGameEventPacket(
                     net.minecraft.network.protocol.game.ClientboundGameEventPacket.CHANGE_GAME_MODE, 
                     player.gameMode.getGameModeForPlayer().getId()));
                 
-                // 5. Send player info update
-                var playerList = player.getServer().getPlayerList();
-                if (playerList != null) {
-                    playerList.sendAllPlayerInfo(player);
-                }
-                
-                // 6. Send inventory sync
-                if (player.containerMenu != null) {
-                    player.containerMenu.sendAllDataToRemote();
-                }
-                
-                // 7. Send experience sync
-                player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetExperiencePacket(
-                    player.experienceProgress, player.totalExperience, player.experienceLevel));
-                
-                // 8. Send health sync
-                player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetHealthPacket(
-                    player.getHealth(), player.getFoodData().getFoodLevel(), player.getFoodData().getSaturationLevel()));
-                
-                // 9. Critical: Send level event that should trigger loading completion
-                player.connection.send(new net.minecraft.network.protocol.game.ClientboundGameEventPacket(
-                    net.minecraft.network.protocol.game.ClientboundGameEventPacket.STOP_RAINING, 0.0F));
-                
-                // 10. Send another position update to ensure client knows where they are
-                player.connection.teleport(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
-                
-                // 11. Force immediate packet delivery
+                // 4. Force packet delivery
                 player.connection.getConnection().flushChannel();
                 
                 LOGGER.info("BedrockLoadingScreenMixin: Completed loading screen exit sequence for {} ({})", playerName, attempt);
