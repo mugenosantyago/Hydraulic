@@ -89,8 +89,17 @@ public class GeyserSpawnPacketFix {
                         // Try to access the downstream session (Bedrock client)
                         try {
                             LOGGER.info("GeyserSpawnPacketFix: Attempting to access downstream session for: {}", playerName);
+                            LOGGER.info("GeyserSpawnPacketFix: Connection class: {}", connection.getClass().getName());
+                            
+                            // Log available methods
+                            java.lang.reflect.Method[] methods = connection.getClass().getMethods();
+                            LOGGER.info("GeyserSpawnPacketFix: Available methods: {}", 
+                                java.util.Arrays.stream(methods).map(m -> m.getName()).toArray());
+                            
                             java.lang.reflect.Method getDownstreamSessionMethod = connection.getClass().getMethod("downstream");
                             Object downstreamSession = getDownstreamSessionMethod.invoke(connection);
+                            
+                            LOGGER.info("GeyserSpawnPacketFix: Downstream session result: {}", downstreamSession != null ? downstreamSession.getClass().getName() : "null");
                             
                             if (downstreamSession != null) {
                                 LOGGER.info("GeyserSpawnPacketFix: Successfully accessed downstream session for: {}", playerName);
