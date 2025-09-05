@@ -31,7 +31,7 @@ public class GeyserSessionSyncMixin {
         method = "<init>",
         at = @At("HEAD")
     )
-    private void ensureGeyserSessionReady(net.minecraft.server.MinecraftServer server, net.minecraft.network.Connection connection, ServerPlayer player, net.minecraft.server.network.CommonListenerCookie cookie, CallbackInfo ci) {
+    private static void ensureGeyserSessionReady(net.minecraft.server.MinecraftServer server, net.minecraft.network.Connection connection, ServerPlayer player, net.minecraft.server.network.CommonListenerCookie cookie, CallbackInfo ci) {
         try {
             if (player != null && BedrockDetectionHelper.isFloodgatePlayer(player.getGameProfile().getName())) {
                 String playerName = player.getGameProfile().getName();
@@ -81,7 +81,7 @@ public class GeyserSessionSyncMixin {
     /**
      * Prepares Geyser's session for the spawn sequence.
      */
-    private void prepareGeyserSessionForSpawn(ServerPlayer player) {
+    private static void prepareGeyserSessionForSpawn(ServerPlayer player) {
         try {
             String playerName = player.getGameProfile().getName();
             
@@ -155,7 +155,7 @@ public class GeyserSessionSyncMixin {
     /**
      * Validates and corrects Geyser session state after initialization.
      */
-    private void validateAndCorrectGeyserState(ServerPlayer player) {
+    private static void validateAndCorrectGeyserState(ServerPlayer player) {
         try {
             String playerName = player.getGameProfile().getName();
             
