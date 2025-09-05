@@ -38,7 +38,7 @@ public class BedrockSpawnSequenceMixin {
                     server.execute(() -> {
                     try {
                         // Give Geyser a moment to initialize the session properly
-                        Thread.sleep(100);
+                        Thread.sleep(250);
                         
                         // Force a comprehensive spawn packet sequence
                         ensureProperSpawnSequence(player);
@@ -78,7 +78,7 @@ public class BedrockSpawnSequenceMixin {
                     } catch (Exception e) {
                         LOGGER.debug("BedrockSpawnSequenceMixin: Exception in spawn sequence finalization: {}", e.getMessage());
                     }
-                    }, 500, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    }, 1000, java.util.concurrent.TimeUnit.MILLISECONDS);
                 }
             }
         } catch (Exception e) {
