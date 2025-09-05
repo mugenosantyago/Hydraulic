@@ -41,7 +41,7 @@ public class GeyserPacketTranslatorErrorFix {
      */
     @Inject(
         method = "translate",
-        at = @At(value = "INVOKE", target = "translate0"),
+        at = @At("HEAD"),
         cancellable = true,
         remap = false,
         require = 0
