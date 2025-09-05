@@ -46,7 +46,17 @@ public class BedrockPlayerTeleportFix {
                         }
                     });
                     
-                    // Delayed position validation and chunk reload
+                    // Multiple delayed fixes to ensure loading screen dismissal
+                    // Fix 1: Early validation (1 second)
+                    java.util.concurrent.Executors.newSingleThreadScheduledExecutor().schedule(() -> {
+                        try {
+                            earlyPositionFix(player);
+                        } catch (Exception e) {
+                            LOGGER.debug("BedrockPlayerTeleportFix: Exception in early positioning: {}", e.getMessage());
+                        }
+                    }, 1000, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    
+                    // Fix 2: Medium validation (3 seconds)
                     java.util.concurrent.Executors.newSingleThreadScheduledExecutor().schedule(() -> {
                         try {
                             validateAndFixPosition(player);
@@ -54,6 +64,15 @@ public class BedrockPlayerTeleportFix {
                             LOGGER.debug("BedrockPlayerTeleportFix: Exception in delayed positioning: {}", e.getMessage());
                         }
                     }, 3000, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    
+                    // Fix 3: Final validation (5 seconds) - aggressive loading screen fix
+                    java.util.concurrent.Executors.newSingleThreadScheduledExecutor().schedule(() -> {
+                        try {
+                            finalLoadingScreenFix(player);
+                        } catch (Exception e) {
+                            LOGGER.debug("BedrockPlayerTeleportFix: Exception in final fix: {}", e.getMessage());
+                        }
+                    }, 5000, java.util.concurrent.TimeUnit.MILLISECONDS);
                 }
             }
         } catch (Exception e) {
@@ -124,6 +143,39 @@ public class BedrockPlayerTeleportFix {
     }
     
     /**
+     * Early position fix to help with loading screen issues.
+     */
+    private void earlyPositionFix(ServerPlayer player) {
+        try {
+            String playerName = player.getGameProfile().getName();
+            
+            if (player.connection == null || !player.connection.getConnection().isConnected()) {
+                return;
+            }
+            
+            LOGGER.info("BedrockPlayerTeleportFix: Early position fix for: {}", playerName);
+            
+            // Send critical packets that might help with loading screen
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundGameEventPacket(
+                net.minecraft.network.protocol.game.ClientboundGameEventPacket.LEVEL_CHUNKS_LOAD_START, 0.0F));
+            
+            // Force position update
+            player.connection.teleport(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
+            
+            // Send abilities
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket(player.getAbilities()));
+            
+            // Force flush
+            player.connection.getConnection().flushChannel();
+            
+            LOGGER.info("BedrockPlayerTeleportFix: Completed early position fix for: {}", playerName);
+            
+        } catch (Exception e) {
+            LOGGER.debug("BedrockPlayerTeleportFix: Exception in early position fix: {}", e.getMessage());
+        }
+    }
+    
+    /**
      * Validates and fixes position after a delay.
      */
     private void validateAndFixPosition(ServerPlayer player) {
@@ -155,6 +207,85 @@ public class BedrockPlayerTeleportFix {
             
         } catch (Exception e) {
             LOGGER.debug("BedrockPlayerTeleportFix: Exception in position validation: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * Final aggressive loading screen fix for persistent issues.
+     */
+    private void finalLoadingScreenFix(ServerPlayer player) {
+        try {
+            String playerName = player.getGameProfile().getName();
+            
+            if (player.connection == null || !player.connection.getConnection().isConnected()) {
+                LOGGER.debug("BedrockPlayerTeleportFix: Player {} no longer connected during final fix", playerName);
+                return;
+            }
+            
+            LOGGER.warn("BedrockPlayerTeleportFix: FINAL AGGRESSIVE LOADING SCREEN FIX for: {}", playerName);
+            
+            // Aggressive approach: Force multiple loading completion signals
+            
+            // 1. Send multiple game events that might trigger loading completion
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundGameEventPacket(
+                net.minecraft.network.protocol.game.ClientboundGameEventPacket.LEVEL_CHUNKS_LOAD_START, 0.0F));
+            
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundGameEventPacket(
+                net.minecraft.network.protocol.game.ClientboundGameEventPacket.STOP_RAINING, 0.0F));
+            
+            // 2. Force multiple position updates
+            for (int i = 0; i < 3; i++) {
+                player.connection.teleport(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
+            }
+            
+            // 3. Send multiple ability updates
+            for (int i = 0; i < 3; i++) {
+                player.connection.send(new net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket(player.getAbilities()));
+            }
+            
+            // 4. Try to trigger spawn completion through Geyser API
+            try {
+                Class<?> geyserApiClass = Class.forName("org.geysermc.geyser.api.GeyserApi");
+                Object geyserApi = geyserApiClass.getMethod("api").invoke(null);
+                
+                if (geyserApi != null) {
+                    Object connection = geyserApiClass.getMethod("connectionByUuid", java.util.UUID.class)
+                        .invoke(geyserApi, player.getUUID());
+                    
+                    if (connection != null) {
+                        LOGGER.info("BedrockPlayerTeleportFix: Forcing final Geyser session completion for: {}", playerName);
+                        
+                        // Force sentSpawnPacket again
+                        try {
+                            java.lang.reflect.Field sentSpawnPacketField = connection.getClass().getDeclaredField("sentSpawnPacket");
+                            sentSpawnPacketField.setAccessible(true);
+                            sentSpawnPacketField.setBoolean(connection, true);
+                            LOGGER.info("BedrockPlayerTeleportFix: Re-forced sentSpawnPacket to true for: {}", playerName);
+                        } catch (Exception fieldException) {
+                            LOGGER.debug("BedrockPlayerTeleportFix: Could not access sentSpawnPacket in final fix: {}", fieldException.getMessage());
+                        }
+                    }
+                }
+            } catch (Exception geyserException) {
+                LOGGER.debug("BedrockPlayerTeleportFix: Could not access Geyser in final fix: {}", geyserException.getMessage());
+            }
+            
+            // 5. Force final connection flush multiple times
+            for (int i = 0; i < 5; i++) {
+                player.connection.getConnection().flushChannel();
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+            
+            LOGGER.warn("BedrockPlayerTeleportFix: COMPLETED FINAL AGGRESSIVE FIX for: {}", playerName);
+            
+        } catch (Exception e) {
+            LOGGER.error("BedrockPlayerTeleportFix: Exception in final loading screen fix for {}: {}", 
+                player.getGameProfile().getName(), e.getMessage());
         }
     }
 }
