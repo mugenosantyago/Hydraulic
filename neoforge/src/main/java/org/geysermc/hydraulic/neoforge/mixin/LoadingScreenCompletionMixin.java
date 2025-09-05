@@ -48,14 +48,6 @@ public class LoadingScreenCompletionMixin {
                             // Send a game mode packet to ensure client state is synced
                             player.setGameMode(player.gameMode.getGameModeForPlayer());
                             
-                            // Force chunk updates around the player
-                            player.serverLevel().getChunkSource().addRegionTicket(
-                                net.minecraft.server.level.TicketType.PLAYER,
-                                new net.minecraft.world.level.ChunkPos(player.blockPosition()),
-                                3,
-                                player
-                            );
-                            
                             LOGGER.info("LoadingScreenCompletionMixin: Sent loading completion signals for Bedrock player: {}", playerName);
                             
                         } catch (Exception e) {
