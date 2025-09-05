@@ -28,7 +28,8 @@
     "GeyserSpawnStateMixin",
     "GeyserSessionSyncMixin",
     "ChunkTrackingMixin",
-    "SafeTaskExecutionMixin"
+    "SafeTaskExecutionMixin",
+    "FloodgateSkinMixin"
   ],
   "injectors": {
     "defaultRequire": 0
