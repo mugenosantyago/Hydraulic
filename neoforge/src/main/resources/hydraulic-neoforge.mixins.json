@@ -40,6 +40,7 @@
     "MovePlayerDebugMixin",
     "PacketInterceptorMixin",
     "TeleportPacketFixMixin",
+    "TeleportValidationBypassMixin",
     "BedrockSafeSpawnMixin",
     "BedrockDeathRespawnMixin",
     "BedrockGameplayTransitionMixin",
