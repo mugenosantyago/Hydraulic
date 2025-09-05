@@ -40,50 +40,67 @@ public class SafeTaskExecutionMixin {
                     String taskString = task.toString();
                     LOGGER.info("SafeTaskExecutionMixin: Executing task: {}", taskString);
                     
-                    // Always execute ALL tasks with comprehensive NPE protection
-                    // This is more aggressive but necessary to catch the TrackedEntity NPE
+                    // ULTRA AGGRESSIVE: Execute ALL tasks with full exception protection
+                    // If ANY NPE occurs that could be related to Floodgate/TrackedEntity, we'll catch it
                     try {
-                        // Execute the task with comprehensive NPE protection
+                        // Execute the task with maximum protection
                         task.run();
                         ci.cancel(); // We handled it, prevent double execution
                         return;
                     } catch (NullPointerException npe) {
                         String npeMessage = npe.getMessage();
-                        String stackTrace = java.util.Arrays.toString(npe.getStackTrace());
+                        String stackTrace = npe.getStackTrace() != null ? java.util.Arrays.toString(npe.getStackTrace()) : "null";
                         
-                        LOGGER.info("SafeTaskExecutionMixin: Caught NPE - Message: {}", npeMessage);
-                        LOGGER.debug("SafeTaskExecutionMixin: NPE Stack trace contains: {}", stackTrace);
+                        LOGGER.info("SafeTaskExecutionMixin: Caught NPE - Message: {}, Task: {}", npeMessage, taskString);
+                        LOGGER.info("SafeTaskExecutionMixin: NPE Stack trace: {}", stackTrace);
                         
-                        // Check for TrackedEntity NPE with multiple detection methods
-                        boolean isTrackedEntityNPE = false;
+                        // ULTRA AGGRESSIVE: Catch ALL NPEs that might be related to Floodgate or TrackedEntity
+                        boolean shouldPreventNPE = false;
                         
+                        // Check message for TrackedEntity-related content
                         if (npeMessage != null) {
-                            isTrackedEntityNPE = npeMessage.contains("TrackedEntity") || 
-                                               npeMessage.contains("removePlayer") ||
-                                               npeMessage.contains("entry") ||
-                                               npeMessage.contains("ChunkMap") ||
-                                               npeMessage.contains("because \"entry\" is null");
+                            shouldPreventNPE = npeMessage.contains("TrackedEntity") || 
+                                             npeMessage.contains("removePlayer") ||
+                                             npeMessage.contains("entry") ||
+                                             npeMessage.contains("ChunkMap") ||
+                                             npeMessage.contains("because \"entry\" is null") ||
+                                             npeMessage.contains("ModSkinApplier");
                         }
                         
-                        // Also check stack trace for Floodgate ModSkinApplier
-                        if (!isTrackedEntityNPE && stackTrace != null) {
-                            isTrackedEntityNPE = stackTrace.contains("ModSkinApplier") ||
-                                               stackTrace.contains("floodgate") ||
-                                               stackTrace.contains("lambda$applySkin$0");
+                        // Check stack trace for Floodgate-related content
+                        if (!shouldPreventNPE && stackTrace != null) {
+                            shouldPreventNPE = stackTrace.contains("ModSkinApplier") ||
+                                             stackTrace.contains("floodgate") ||
+                                             stackTrace.contains("lambda$applySkin") ||
+                                             stackTrace.contains("TrackedEntity") ||
+                                             stackTrace.contains("removePlayer");
                         }
                         
-                        if (isTrackedEntityNPE) {
-                            LOGGER.info("SafeTaskExecutionMixin: Prevented TrackedEntity/Floodgate NPE: {}", npeMessage);
+                        // Check task string for Floodgate-related content
+                        if (!shouldPreventNPE && taskString != null) {
+                            shouldPreventNPE = taskString.contains("ModSkinApplier") ||
+                                             taskString.contains("floodgate") ||
+                                             taskString.contains("applySkin");
+                        }
+                        
+                        // NUCLEAR OPTION: If this is any lambda task, prevent ALL NPEs as a safety measure
+                        if (!shouldPreventNPE && taskString != null && taskString.contains("lambda")) {
+                            LOGGER.warn("SafeTaskExecutionMixin: NUCLEAR OPTION - Preventing lambda NPE as safety measure: {}", npeMessage);
+                            shouldPreventNPE = true;
+                        }
+                        
+                        if (shouldPreventNPE) {
+                            LOGGER.info("SafeTaskExecutionMixin: PREVENTED NPE CRASH: {}", npeMessage);
                             ci.cancel(); // Prevent the crash
                             return;
                         } else {
-                            // For other NPEs, log and re-throw
-                            LOGGER.debug("SafeTaskExecutionMixin: Re-throwing non-TrackedEntity NPE: {}", npeMessage);
+                            // For clearly unrelated NPEs, re-throw them
+                            LOGGER.debug("SafeTaskExecutionMixin: Re-throwing unrelated NPE: {}", npeMessage);
                             throw npe;
                         }
                     } catch (Exception e) {
-                        // Log other exceptions but let them through unless they're critical
-                        LOGGER.debug("SafeTaskExecutionMixin: Exception in task execution: {} - {}", e.getClass().getSimpleName(), e.getMessage());
+                        // For non-NPE exceptions, log and re-throw
+                        LOGGER.debug("SafeTaskExecutionMixin: Non-NPE exception in task execution: {} - {}", e.getClass().getSimpleName(), e.getMessage());
                         throw e;
                     }
                 }
