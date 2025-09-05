@@ -53,6 +53,9 @@ public class PacketErrorHandlerMixin {
                     (errorMessage != null && (errorMessage.contains("may not be sent to the client") || 
                                             errorMessage.contains("UnsupportedOperationException") ||
                                             errorMessage.contains("Payload") ||
+                                            errorMessage.contains("Invalid move player packet received") ||
+                                            errorMessage.contains("Invalid move player") ||
+                                            errorMessage.contains("multiplayer.disconnect.invalid_player_movement") ||
                                             errorMessage.contains("null")))) {
                     
                     LOGGER.debug("PacketErrorHandlerMixin: Preventing packet error for Bedrock player: {} (Packet: {}, Error: {})", 

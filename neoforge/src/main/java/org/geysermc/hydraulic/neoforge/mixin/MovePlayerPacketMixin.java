@@ -1,5 +1,6 @@
 package org.geysermc.hydraulic.neoforge.mixin;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
@@ -113,6 +114,7 @@ public class MovePlayerPacketMixin {
     
     /**
      * Additional injection to catch and handle move player validation errors that might still occur.
+     * This targets any disconnect call within the handleMovePlayer method.
      */
     @Inject(
         method = "handleMovePlayer",
@@ -133,6 +135,35 @@ public class MovePlayerPacketMixin {
             }
         } catch (Exception e) {
             LOGGER.debug("MovePlayerPacketMixin: Exception in disconnect prevention: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * Additional broad injection to catch any disconnect calls that might be triggered by movement validation.
+     * This is a more aggressive approach to prevent "Invalid move player packet received" disconnects.
+     */
+    @Inject(
+        method = "disconnect(Lnet/minecraft/network/chat/Component;)V",
+        at = @At("HEAD"),
+        cancellable = true
+    )
+    private void preventAnyMovePlayerDisconnect(Component reason, CallbackInfo ci) {
+        try {
+            if (player != null && reason != null) {
+                String playerName = player.getGameProfile().getName();
+                boolean isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);
+                String disconnectMessage = reason.getString();
+                
+                if (isBedrockPlayer && (disconnectMessage.contains("Invalid move player packet received") ||
+                                      disconnectMessage.contains("Invalid move player") ||
+                                      disconnectMessage.contains("multiplayer.disconnect.invalid_player_movement"))) {
+                    LOGGER.info("MovePlayerPacketMixin: Preventing 'Invalid move player packet received' disconnect for Bedrock player: {}", 
+                        playerName);
+                    ci.cancel(); // Prevent the disconnect
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.debug("MovePlayerPacketMixin: Exception in general disconnect prevention: {}", e.getMessage());
         }
     }
 }
