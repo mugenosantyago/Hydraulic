@@ -37,6 +37,8 @@
     "MovePlayerValidationMixin",
     "MovePlayerValidationBypassMixin",
     "ConservativeMovePlayerMixin",
+    "MovePlayerDebugMixin",
+    "PacketInterceptorMixin",
     "EntityVariantNPEFix",
     "GeyserPacketTranslatorErrorFix"
   ],

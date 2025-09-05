@@ -43,6 +43,10 @@ public class ConservativeMovePlayerMixin {
                     String reasonText = reason != null ? reason.getString() : "";
                     String lowerReasonText = reasonText.toLowerCase();
                     
+                    // TEMPORARILY DISABLED - Let all disconnects through to see the raw error
+                    LOGGER.info("ConservativeMovePlayerMixin: ALLOWING disconnect for debugging - Bedrock player: {} (reason: {})", playerName, reasonText);
+                    
+                    /*
                     // ONLY prevent disconnects that are specifically about invalid move player packets
                     if ((lowerReasonText.contains("invalid") && 
                          (lowerReasonText.contains("move") || lowerReasonText.contains("player")) &&
@@ -54,6 +58,7 @@ public class ConservativeMovePlayerMixin {
                         ci.cancel(); // Prevent ONLY this specific disconnect
                         return;
                     }
+                    */
                 }
             }
         } catch (Exception e) {
