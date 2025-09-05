@@ -30,6 +30,7 @@
     "ChunkTrackingMixin",
     "SafeTaskExecutionMixin",
     "BlockableEventLoopNPEFix",
+    "GeyserChunkTranslationFix",
     "BedrockLoadingScreenFix",
     "GeyserSpawnPacketFix"
   ],
