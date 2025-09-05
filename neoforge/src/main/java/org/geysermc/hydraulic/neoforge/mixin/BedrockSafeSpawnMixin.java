@@ -4,7 +4,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import org.geysermc.hydraulic.neoforge.util.BedrockDetectionHelper;
 import org.slf4j.Logger;
@@ -60,13 +59,7 @@ public class BedrockSafeSpawnMixin {
                 player.setYRot(0.0F);
                 player.setXRot(0.0F);
                 
-                // Also set the respawn position to ensure consistency
-                try {
-                    player.setRespawnPosition(spawnLevel.dimension(), worldSpawn, 0.0F, false, false);
-                } catch (Exception e) {
-                    // Ignore respawn position setting errors for now
-                    LOGGER.debug("BedrockSafeSpawnMixin: Could not set respawn position: {}", e.getMessage());
-                }
+                // Skip setting respawn position for now due to API differences
                 
                 LOGGER.info("BedrockSafeSpawnMixin: Successfully set safe spawn position for: {}", playerName);
             }
@@ -122,7 +115,16 @@ public class BedrockSafeSpawnMixin {
         BlockPos pos = new BlockPos((int) Math.floor(x), 0, (int) Math.floor(z));
         
         // Start from a reasonable height and work our way down
-        for (int y = Math.min(level.getHeight() + level.getMinBuildHeight() - 10, 120); y >= level.getMinBuildHeight() + 2; y--) {
+        int minY = -64; // Default void level for most worlds
+        int maxY = 320; // Default build height for most worlds
+        try {
+            minY = level.dimensionType().minY();
+            maxY = level.dimensionType().minY() + level.dimensionType().height();
+        } catch (Exception e) {
+            LOGGER.debug("BedrockSafeSpawnMixin: Could not get dimension bounds, using defaults");
+        }
+        
+        for (int y = Math.min(maxY - 10, 120); y >= minY + 2; y--) {
             BlockPos checkPos = pos.atY(y);
             BlockPos belowPos = checkPos.below();
             BlockPos abovePos = checkPos.above();
@@ -158,7 +160,13 @@ public class BedrockSafeSpawnMixin {
             if (level == null) return false;
             
             // Check if player is below minimum build height (in the void)
-            if (y < level.getMinBuildHeight()) {
+            int minY = -64; // Default void level
+            try {
+                minY = level.dimensionType().minY();
+            } catch (Exception e) {
+                // Use default
+            }
+            if (y < minY) {
                 LOGGER.debug("BedrockSafeSpawnMixin: Player {} is below minimum build height: {}", 
                     player.getGameProfile().getName(), y);
                 return true;

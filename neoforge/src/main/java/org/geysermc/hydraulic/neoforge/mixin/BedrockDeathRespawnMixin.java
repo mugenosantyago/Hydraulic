@@ -1,12 +1,8 @@
 package org.geysermc.hydraulic.neoforge.mixin;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.protocol.game.ClientboundPlayerCombatEndPacket;
-import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
-import net.minecraft.network.protocol.game.ClientboundRespawnPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.GameType;
 import org.geysermc.hydraulic.neoforge.util.BedrockDetectionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,10 +115,36 @@ public class BedrockDeathRespawnMixin {
                 try {
                     // Use the server's respawn mechanism
                     var server = player.getServer();
+                    if (server == null) {
+                        LOGGER.warn("BedrockDeathRespawnMixin: Server is null for player {}", playerName);
+                        return;
+                    }
                     var playerList = server.getPlayerList();
                     
-                    // Trigger respawn
-                    ServerPlayer respawnedPlayer = playerList.respawn(player, false, net.minecraft.world.entity.player.Player.RespawnReason.DEATH);
+                    // Trigger respawn - use reflection to avoid enum issues
+                    ServerPlayer respawnedPlayer = null;
+                    try {
+                        // Try to get the RespawnReason enum
+                        Class<?> respawnReasonClass = Class.forName("net.minecraft.world.entity.player.Player$RespawnReason");
+                        Object deathReason = respawnReasonClass.getField("DEATH").get(null);
+                        
+                        java.lang.reflect.Method respawnMethod = playerList.getClass().getDeclaredMethod("respawn", 
+                            ServerPlayer.class, boolean.class, respawnReasonClass);
+                        respawnedPlayer = (ServerPlayer) respawnMethod.invoke(playerList, player, false, deathReason);
+                    } catch (Exception respawnReflectionException) {
+                        LOGGER.debug("BedrockDeathRespawnMixin: Could not use respawn method with reason: {}", 
+                            respawnReflectionException.getMessage());
+                        
+                        // Fallback: try without the reason parameter
+                        try {
+                            java.lang.reflect.Method respawnMethod = playerList.getClass().getDeclaredMethod("respawn", 
+                                ServerPlayer.class, boolean.class);
+                            respawnedPlayer = (ServerPlayer) respawnMethod.invoke(playerList, player, false);
+                        } catch (Exception fallbackException) {
+                            LOGGER.debug("BedrockDeathRespawnMixin: Fallback respawn also failed: {}", 
+                                fallbackException.getMessage());
+                        }
+                    }
                     
                     if (respawnedPlayer != null) {
                         // Move to safe position
@@ -193,7 +215,16 @@ public class BedrockDeathRespawnMixin {
         BlockPos pos = new BlockPos((int) Math.floor(x), 0, (int) Math.floor(z));
         
         // Start from a reasonable height and work down
-        for (int y = Math.min(level.getHeight() + level.getMinBuildHeight() - 10, 120); y >= level.getMinBuildHeight() + 2; y--) {
+        int minY = -64; // Default void level for most worlds
+        int maxY = 320; // Default build height for most worlds
+        try {
+            minY = level.dimensionType().minY();
+            maxY = level.dimensionType().minY() + level.dimensionType().height();
+        } catch (Exception e) {
+            LOGGER.debug("BedrockDeathRespawnMixin: Could not get dimension bounds, using defaults");
+        }
+        
+        for (int y = Math.min(maxY - 10, 120); y >= minY + 2; y--) {
             BlockPos checkPos = pos.atY(y);
             BlockPos belowPos = checkPos.below();
             BlockPos abovePos = checkPos.above();
@@ -218,7 +249,13 @@ public class BedrockDeathRespawnMixin {
             ServerLevel level = player.level() instanceof ServerLevel ? (ServerLevel) player.level() : null;
             if (level == null) return false;
             
-            return y < level.getMinBuildHeight() + 5 || 
+            int minY = -64; // Default void level
+            try {
+                minY = level.dimensionType().minY();
+            } catch (Exception e) {
+                // Use default
+            }
+            return y < minY + 5 || 
                    level.getBlockState(player.blockPosition()).is(net.minecraft.world.level.block.Blocks.LAVA);
         } catch (Exception e) {
             return false;
