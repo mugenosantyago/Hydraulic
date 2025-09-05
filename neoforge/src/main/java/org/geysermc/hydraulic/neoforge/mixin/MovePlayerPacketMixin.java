@@ -39,7 +39,7 @@ public class MovePlayerPacketMixin {
                 boolean isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);
                 
                 if (isBedrockPlayer) {
-                    LOGGER.info("MovePlayerPacketMixin: Handling move player packet for Bedrock player: {} (Packet: {})", 
+                    LOGGER.debug("MovePlayerPacketMixin: Handling move player packet for Bedrock player: {} (Packet: {})", 
                         playerName, packet.getClass().getSimpleName());
                     
                     // For Bedrock players, we need to be more lenient with movement validation
@@ -109,7 +109,7 @@ public class MovePlayerPacketMixin {
                     }
                     
                     // For valid packets from Bedrock players, let them through with debug logging
-                    LOGGER.info("MovePlayerPacketMixin: Processing valid move packet for Bedrock player {}", playerName);
+                    LOGGER.debug("MovePlayerPacketMixin: Processing valid move packet for Bedrock player {}", playerName);
                 }
             }
         } catch (Exception e) {
@@ -168,22 +168,13 @@ public class MovePlayerPacketMixin {
                 if (isBedrockPlayer) {
                     String reasonText = reason != null ? reason.getString() : "unknown";
                     
-                    // Be very aggressive about preventing disconnects for Bedrock players
-                    if (reasonText.toLowerCase().contains("invalid") || 
-                        reasonText.toLowerCase().contains("move") || 
-                        reasonText.toLowerCase().contains("player") ||
-                        reasonText.toLowerCase().contains("movement") || 
-                        reasonText.toLowerCase().contains("position") ||
-                        reasonText.toLowerCase().contains("teleport") ||
-                        reasonText.toLowerCase().contains("packet") ||
-                        reasonText.toLowerCase().contains("flying") ||
-                        reasonText.toLowerCase().contains("speed") ||
-                        reasonText.toLowerCase().contains("hack") ||
-                        reasonText.toLowerCase().contains("cheat") ||
-                        reasonText.toLowerCase().contains("validation") ||
-                        reasonText.equals("disconnected")) { // Generic disconnect
+                    // Only prevent specific move player validation disconnects
+                    if ((reasonText.toLowerCase().contains("invalid") && 
+                         (reasonText.toLowerCase().contains("move") || reasonText.toLowerCase().contains("player")) &&
+                         reasonText.toLowerCase().contains("packet")) ||
+                        reasonText.contains("multiplayer.disconnect.invalid_player_movement")) {
                         
-                        LOGGER.info("MovePlayerPacketMixin: AGGRESSIVELY preventing disconnect for Bedrock player {}: {}", 
+                        LOGGER.info("MovePlayerPacketMixin: Preventing move player validation disconnect for Bedrock player {}: {}", 
                             playerName, reasonText);
                         ci.cancel(); // Prevent the disconnect
                         return;
