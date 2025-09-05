@@ -39,6 +39,7 @@
     "ConservativeMovePlayerMixin",
     "MovePlayerDebugMixin",
     "PacketInterceptorMixin",
+    "LoadingScreenCompletionMixin",
     "TeleportPacketFixMixin",
     "EntityVariantNPEFix",
     "GeyserPacketTranslatorErrorFix"
