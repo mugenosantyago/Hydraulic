@@ -26,13 +26,9 @@ public class SafeTaskExecutionMixin {
         cancellable = true
     )
     private void safeTaskExecution(CallbackInfo ci) {
-        // CRITICAL: Add immediate logging to verify mixin is working
-        LOGGER.info("SafeTaskExecutionMixin: MIXIN TRIGGERED - Intercepting TickTask.run()");
-        
         try {
             // Get the task runnable
             TickTask self = (TickTask) (Object) this;
-            LOGGER.info("SafeTaskExecutionMixin: Got TickTask instance");
             
             // Use reflection to access the task field
             try {
@@ -42,7 +38,16 @@ public class SafeTaskExecutionMixin {
                 
                 if (task != null) {
                     String taskString = task.toString();
-                    LOGGER.info("SafeTaskExecutionMixin: Executing task: {}", taskString);
+                    
+                    // Check if this is a Floodgate-related task - ONLY log these
+                    boolean isFloodgateTask = taskString.contains("ModSkinApplier") || 
+                                            taskString.contains("floodgate") || 
+                                            taskString.contains("applySkin") ||
+                                            taskString.contains("lambda$applySkin");
+                    
+                    if (isFloodgateTask) {
+                        LOGGER.warn("SafeTaskExecutionMixin: DETECTED FLOODGATE TASK - Will execute with protection: {}", taskString);
+                    }
                     
                     // ULTRA AGGRESSIVE: Execute ALL tasks with full exception protection
                     // If ANY NPE occurs that could be related to Floodgate/TrackedEntity, we'll catch it
