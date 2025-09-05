@@ -24,39 +24,31 @@ public class BlockableEventLoopNPEFix {
         at = @At("HEAD"),
         cancellable = true
     )
-    private void preventTrackedEntityNPE(net.minecraft.server.TickTask task, CallbackInfo ci) {
+    private void preventTrackedEntityNPE(Runnable task, CallbackInfo ci) {
         try {
             if (task != null) {
+                String taskString = task.toString();
+                
+                // Check if this is a Floodgate-related task
+                boolean isFloodgateTask = taskString.contains("ModSkinApplier") || 
+                                        taskString.contains("floodgate") || 
+                                        taskString.contains("applySkin") ||
+                                        taskString.contains("lambda$applySkin");
+                
+                if (isFloodgateTask) {
+                    LOGGER.warn("BlockableEventLoopNPEFix: DETECTED FLOODGATE TASK - Executing with protection: {}", taskString);
+                }
+                
                 // Execute the task with comprehensive NPE protection
                 try {
-                    // Use reflection to get the actual task
-                    java.lang.reflect.Field taskField = task.getClass().getDeclaredField("task");
-                    taskField.setAccessible(true);
-                    Runnable actualTask = (Runnable) taskField.get(task);
+                    task.run();
                     
-                    if (actualTask != null) {
-                        String taskString = actualTask.toString();
-                        
-                        // Check if this is a Floodgate-related task
-                        boolean isFloodgateTask = taskString.contains("ModSkinApplier") || 
-                                                taskString.contains("floodgate") || 
-                                                taskString.contains("applySkin") ||
-                                                taskString.contains("lambda$applySkin");
-                        
-                        if (isFloodgateTask) {
-                            LOGGER.warn("BlockableEventLoopNPEFix: DETECTED FLOODGATE TASK - Executing with protection: {}", taskString);
-                        }
-                        
-                        // Execute with NPE protection
-                        actualTask.run();
-                        
-                        if (isFloodgateTask) {
-                            LOGGER.info("BlockableEventLoopNPEFix: Successfully executed Floodgate task without NPE");
-                        }
-                        
-                        ci.cancel(); // We handled it, prevent double execution
-                        return;
+                    if (isFloodgateTask) {
+                        LOGGER.info("BlockableEventLoopNPEFix: Successfully executed Floodgate task without NPE");
                     }
+                    
+                    ci.cancel(); // We handled it, prevent double execution
+                    return;
                 } catch (NullPointerException npe) {
                     String npeMessage = npe.getMessage();
                     String stackTrace = npe.getStackTrace() != null ? java.util.Arrays.toString(npe.getStackTrace()) : "null";
