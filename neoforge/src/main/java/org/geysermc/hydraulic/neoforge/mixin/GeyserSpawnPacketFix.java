@@ -186,17 +186,17 @@ public class GeyserSpawnPacketFix {
                 LOGGER.warn("GeyserSpawnPacketFix: Could not get field list: {}", fieldsException.getMessage());
             }
             
-            // Try to directly set the sentSpawn flag to true
+            // Try to directly set the sentSpawnPacket flag to true (this is the correct field name!)
             try {
-                java.lang.reflect.Field sentSpawnField = sessionClass.getDeclaredField("sentSpawn");
-                sentSpawnField.setAccessible(true);
-                boolean currentValue = sentSpawnField.getBoolean(downstreamSession);
-                LOGGER.info("GeyserSpawnPacketFix: Found sentSpawn field for {}, current value: {}", playerName, currentValue);
-                sentSpawnField.setBoolean(downstreamSession, true);
-                LOGGER.info("GeyserSpawnPacketFix: Successfully forced sentSpawn to true for: {}", playerName);
+                java.lang.reflect.Field sentSpawnPacketField = sessionClass.getDeclaredField("sentSpawnPacket");
+                sentSpawnPacketField.setAccessible(true);
+                boolean currentValue = sentSpawnPacketField.getBoolean(downstreamSession);
+                LOGGER.info("GeyserSpawnPacketFix: Found sentSpawnPacket field for {}, current value: {}", playerName, currentValue);
+                sentSpawnPacketField.setBoolean(downstreamSession, true);
+                LOGGER.info("GeyserSpawnPacketFix: SUCCESSFULLY FORCED sentSpawnPacket to true for: {}", playerName);
                 spawnPacketSent = true;
             } catch (NoSuchFieldException nsfe) {
-                LOGGER.warn("GeyserSpawnPacketFix: sentSpawn field not found, trying alternative fields for: {}", playerName);
+                LOGGER.warn("GeyserSpawnPacketFix: sentSpawnPacket field not found, trying alternative fields for: {}", playerName);
                 
                 // Try alternative field names that might control spawn state
                 String[] possibleFields = {"spawned", "hasSpawned", "playerSpawned", "spawnSent", "spawnPacketSent", "loginComplete", "loggedIn"};
