@@ -39,6 +39,8 @@ public class MovePlayerPacketMixin {
                 boolean isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);
                 
                 if (isBedrockPlayer) {
+                    LOGGER.info("MovePlayerPacketMixin: Processing move packet for Bedrock player: {}", playerName);
+                    
                     // For Bedrock players, we need to be more lenient with movement validation
                     // Check for obviously invalid values that would cause issues
                     boolean hasValidPosition = true;
@@ -133,6 +135,41 @@ public class MovePlayerPacketMixin {
             }
         } catch (Exception e) {
             LOGGER.debug("MovePlayerPacketMixin: Exception in disconnect prevention: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Global disconnect interceptor to catch any "Invalid move player packet received" disconnects.
+     */
+    @Inject(
+        method = "disconnect(Lnet/minecraft/network/chat/Component;)V",
+        at = @At("HEAD"),
+        cancellable = true
+    )
+    private void interceptInvalidMovePlayerDisconnect(net.minecraft.network.chat.Component reason, CallbackInfo ci) {
+        try {
+            if (player != null) {
+                String playerName = player.getGameProfile().getName();
+                boolean isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);
+                String reasonText = reason.getString();
+                
+                if (isBedrockPlayer && reasonText != null && reasonText.contains("Invalid move player packet received")) {
+                    LOGGER.warn("MovePlayerPacketMixin: INTERCEPTED 'Invalid move player packet received' disconnect for Bedrock player: {}", 
+                        playerName);
+                    ci.cancel(); // Prevent the disconnect
+                    
+                    // Reset player position to prevent further issues
+                    try {
+                        LOGGER.info("MovePlayerPacketMixin: Resetting position for Bedrock player: {}", playerName);
+                        // Force a position sync to help stabilize the player
+                        player.connection.teleport(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
+                    } catch (Exception e) {
+                        LOGGER.debug("MovePlayerPacketMixin: Exception during position reset: {}", e.getMessage());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.debug("MovePlayerPacketMixin: Exception in disconnect interception: {}", e.getMessage());
         }
     }
 }
