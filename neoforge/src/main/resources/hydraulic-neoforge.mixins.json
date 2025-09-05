@@ -34,8 +34,7 @@
     "BedrockLoadingScreenFix",
     "GeyserSpawnPacketFix",
     "MovePlayerPacketMixin",
-    "EntityVariantNPEFix",
-    "GeyserPacketTranslatorErrorFix"
+    "LogSpamFilterMixin"
   ],
   "injectors": {
     "defaultRequire": 0
