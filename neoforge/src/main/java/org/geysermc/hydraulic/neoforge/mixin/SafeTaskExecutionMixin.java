@@ -18,6 +18,7 @@ public class SafeTaskExecutionMixin {
     
     /**
      * Safely executes server tasks and catches NPEs from Floodgate skin application.
+     * Uses a more aggressive approach to catch all TrackedEntity NPEs.
      */
     @Inject(
         method = "run",
@@ -37,76 +38,46 @@ public class SafeTaskExecutionMixin {
                 
                 if (task != null) {
                     String taskString = task.toString();
+                    LOGGER.debug("SafeTaskExecutionMixin: Executing task: {}", taskString);
                     
-                    // Check if this is a Floodgate skin application task or any task that might cause TrackedEntity issues
-                    if (taskString.contains("ModSkinApplier") || 
-                        taskString.contains("floodgate") || 
-                        taskString.contains("applySkin") ||
-                        taskString.contains("lambda$applySkin")) {
+                    // Always execute ALL tasks with comprehensive NPE protection
+                    // This is more aggressive but necessary to catch the TrackedEntity NPE
+                    try {
+                        // Execute the task with comprehensive NPE protection
+                        task.run();
+                        ci.cancel(); // We handled it, prevent double execution
+                        return;
+                    } catch (NullPointerException npe) {
+                        String npeMessage = npe.getMessage();
+                        LOGGER.debug("SafeTaskExecutionMixin: Caught NPE: {}", npeMessage);
                         
-                        LOGGER.debug("SafeTaskExecutionMixin: Safely executing potentially problematic Floodgate task");
-                        
-                        try {
-                            // Execute the task with comprehensive NPE protection
-                            task.run();
-                            ci.cancel(); // We handled it, prevent double execution
+                        if (npeMessage != null && (npeMessage.contains("TrackedEntity") || 
+                                                 npeMessage.contains("removePlayer") ||
+                                                 npeMessage.contains("entry") ||
+                                                 npeMessage.contains("ChunkMap") ||
+                                                 npeMessage.contains("because \"entry\" is null"))) {
+                            LOGGER.info("SafeTaskExecutionMixin: Prevented TrackedEntity/ChunkMap NPE: {}", npeMessage);
+                            ci.cancel(); // Prevent the crash
                             return;
-                        } catch (NullPointerException npe) {
-                            String npeMessage = npe.getMessage();
-                            if (npeMessage != null && (npeMessage.contains("TrackedEntity") || 
-                                                     npeMessage.contains("removePlayer") ||
-                                                     npeMessage.contains("entry") ||
-                                                     npeMessage.contains("ChunkMap") ||
-                                                     npeMessage.contains("because \"entry\" is null"))) {
-                                LOGGER.info("SafeTaskExecutionMixin: Prevented TrackedEntity/ChunkMap NPE in Floodgate skin application: {}", npeMessage);
-                                ci.cancel(); // Prevent the crash
-                                return;
-                            } else {
-                                LOGGER.warn("SafeTaskExecutionMixin: Unexpected NPE in Floodgate task: {}", npeMessage);
-                                ci.cancel(); // Prevent crash anyway for safety
-                                return;
-                            }
-                        } catch (Exception e) {
-                            LOGGER.warn("SafeTaskExecutionMixin: Exception in Floodgate task execution: {}", e.getMessage());
-                            ci.cancel(); // Prevent potential crashes
-                            return;
+                        } else {
+                            // For other NPEs, log and re-throw
+                            LOGGER.debug("SafeTaskExecutionMixin: Re-throwing non-TrackedEntity NPE: {}", npeMessage);
+                            throw npe;
                         }
-                    }
-                    
-                    // Additional safety check for any task that might cause TrackedEntity issues
-                    // even if it's not obviously a Floodgate task
-                    if (taskString.contains("lambda")) {
-                        try {
-                            // Execute lambda tasks with NPE protection
-                            task.run();
-                            ci.cancel(); // We handled it, prevent double execution
-                            return;
-                        } catch (NullPointerException npe) {
-                            String npeMessage = npe.getMessage();
-                            if (npeMessage != null && (npeMessage.contains("TrackedEntity") || 
-                                                     npeMessage.contains("removePlayer") ||
-                                                     npeMessage.contains("entry") ||
-                                                     npeMessage.contains("ChunkMap"))) {
-                                LOGGER.info("SafeTaskExecutionMixin: Prevented TrackedEntity NPE in lambda task: {}", npeMessage);
-                                ci.cancel(); // Prevent the crash
-                                return;
-                            } else {
-                                // For lambda tasks, let other NPEs through but log them
-                                LOGGER.debug("SafeTaskExecutionMixin: NPE in lambda task (allowing): {}", npeMessage);
-                            }
-                        } catch (Exception e) {
-                            LOGGER.debug("SafeTaskExecutionMixin: Exception in lambda task: {}", e.getMessage());
-                        }
+                    } catch (Exception e) {
+                        // Log other exceptions but let them through unless they're critical
+                        LOGGER.debug("SafeTaskExecutionMixin: Exception in task execution: {} - {}", e.getClass().getSimpleName(), e.getMessage());
+                        throw e;
                     }
                 }
             } catch (Exception reflectionException) {
                 LOGGER.debug("SafeTaskExecutionMixin: Could not access task field: {}", reflectionException.getMessage());
             }
             
-            // For non-Floodgate tasks or if we can't determine the task type, let it run normally
+            // If we can't access the task or it's null, let the normal execution proceed
             
         } catch (Exception e) {
-            LOGGER.debug("SafeTaskExecutionMixin: Exception in safe task execution: {}", e.getMessage());
+            LOGGER.debug("SafeTaskExecutionMixin: Exception in safe task execution setup: {}", e.getMessage());
         }
     }
 }

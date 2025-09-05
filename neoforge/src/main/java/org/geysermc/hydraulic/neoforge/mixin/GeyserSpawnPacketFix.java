@@ -163,15 +163,42 @@ public class GeyserSpawnPacketFix {
             } catch (Exception fieldException) {
                 LOGGER.debug("GeyserSpawnPacketFix: Could not access sentSpawn field: {}", fieldException.getMessage());
                 
-                // Try alternative field names
-                try {
-                    java.lang.reflect.Field spawnedField = sessionClass.getDeclaredField("spawned");
-                    spawnedField.setAccessible(true);
-                    spawnedField.setBoolean(downstreamSession, true);
-                    LOGGER.info("GeyserSpawnPacketFix: Forced spawned to true for: {}", playerName);
-                    spawnPacketSent = true;
-                } catch (Exception altFieldException) {
-                    LOGGER.debug("GeyserSpawnPacketFix: Could not access spawned field: {}", altFieldException.getMessage());
+                // Try alternative field names and approaches
+                String[] possibleFields = {"spawned", "hasSpawned", "playerSpawned", "spawnSent", "spawnPacketSent"};
+                for (String fieldName : possibleFields) {
+                    try {
+                        java.lang.reflect.Field field = sessionClass.getDeclaredField(fieldName);
+                        field.setAccessible(true);
+                        field.setBoolean(downstreamSession, true);
+                        LOGGER.info("GeyserSpawnPacketFix: Forced {} to true for: {}", fieldName, playerName);
+                        spawnPacketSent = true;
+                        break;
+                    } catch (Exception altFieldException) {
+                        LOGGER.debug("GeyserSpawnPacketFix: Could not access {} field: {}", fieldName, altFieldException.getMessage());
+                    }
+                }
+                
+                // If we still haven't set the flag, try to find any boolean fields related to spawn
+                if (!spawnPacketSent) {
+                    try {
+                        java.lang.reflect.Field[] fields = sessionClass.getDeclaredFields();
+                        for (java.lang.reflect.Field field : fields) {
+                            if (field.getType() == boolean.class && 
+                                field.getName().toLowerCase().contains("spawn")) {
+                                try {
+                                    field.setAccessible(true);
+                                    field.setBoolean(downstreamSession, true);
+                                    LOGGER.info("GeyserSpawnPacketFix: Forced spawn-related field {} to true for: {}", field.getName(), playerName);
+                                    spawnPacketSent = true;
+                                    break;
+                                } catch (Exception setException) {
+                                    // Continue to next field
+                                }
+                            }
+                        }
+                    } catch (Exception fieldsException) {
+                        LOGGER.debug("GeyserSpawnPacketFix: Could not access fields: {}", fieldsException.getMessage());
+                    }
                 }
             }
             
