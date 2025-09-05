@@ -39,7 +39,7 @@ public class MovePlayerPacketMixin {
                 boolean isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);
                 
                 if (isBedrockPlayer) {
-                    LOGGER.debug("MovePlayerPacketMixin: Handling move player packet for Bedrock player: {} (Packet: {})", 
+                    LOGGER.info("MovePlayerPacketMixin: Handling move player packet for Bedrock player: {} (Packet: {})", 
                         playerName, packet.getClass().getSimpleName());
                     
                     // For Bedrock players, we need to be more lenient with movement validation
@@ -169,9 +169,11 @@ public class MovePlayerPacketMixin {
                     String reasonText = reason != null ? reason.getString() : "unknown";
                     
                     // Only prevent specific move player validation disconnects
-                    if ((reasonText.toLowerCase().contains("invalid") && 
-                         (reasonText.toLowerCase().contains("move") || reasonText.toLowerCase().contains("player")) &&
-                         reasonText.toLowerCase().contains("packet")) ||
+                    String lowerReasonText = reasonText.toLowerCase();
+                    if ((lowerReasonText.contains("invalid") && 
+                         (lowerReasonText.contains("move") || lowerReasonText.contains("player")) &&
+                         lowerReasonText.contains("packet")) ||
+                        lowerReasonText.contains("invalid move player packet received") ||
                         reasonText.contains("multiplayer.disconnect.invalid_player_movement")) {
                         
                         LOGGER.info("MovePlayerPacketMixin: Preventing move player validation disconnect for Bedrock player {}: {}", 
