@@ -11,18 +11,96 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * This mixin prevents NullPointerException in Floodgate's ModSkinApplier
- * by adding proper null checks and timing delays for skin application.
+ * by intercepting the lambda method that causes the TrackedEntity NPE.
  * 
- * The root cause is that Floodgate tries to apply skins before the player's
- * TrackedEntity is properly initialized, causing NPEs and potentially
- * contributing to loading screen issues.
+ * The root cause is that Floodgate tries to access TrackedEntity before it's
+ * properly initialized, causing NPEs that prevent proper spawn completion.
  */
-@Mixin(targets = "org.geysermc.floodgate.addon.data.ModSkinApplier", remap = false, priority = 1100)
+@Mixin(targets = "org.geysermc.floodgate.mod.pluginmessage.ModSkinApplier", remap = false, priority = 1100)
 public class FloodgateSkinMixin {
     private static final Logger LOGGER = LoggerFactory.getLogger("FloodgateSkinMixin");
     
     /**
-     * Prevents NPE in Floodgate's skin application by adding null checks and timing delays.
+     * Prevents NPE in Floodgate's skin application lambda by intercepting the problematic method.
+     */
+    @Inject(
+        method = "lambda$applySkin$0",
+        at = @At("HEAD"),
+        cancellable = true,
+        remap = false,
+        require = 0
+    )
+    private static void preventTrackedEntityNPE(net.minecraft.server.level.ServerPlayer player, CallbackInfo ci) {
+        try {
+            if (player != null && BedrockDetectionHelper.isFloodgatePlayer(player.getGameProfile().getName())) {
+                String playerName = player.getGameProfile().getName();
+                
+                // Check if the player's tracking is properly initialized
+                if (player.getServer() == null || 
+                    player.connection == null || 
+                    !player.connection.getConnection().isConnected()) {
+                    
+                    LOGGER.info("FloodgateSkinMixin: Preventing skin application for unready Bedrock player: {}", playerName);
+                    ci.cancel(); // Prevent the lambda execution
+                    return;
+                }
+                
+                // Check if TrackedEntity exists before proceeding
+                try {
+                    var level = player.level();
+                    if (level != null) {
+                        var chunkSource = level.getChunkSource();
+                        if (chunkSource != null) {
+                            var chunkMap = chunkSource.chunkMap;
+                            if (chunkMap != null) {
+                                // Try to access the entity map to verify tracking exists
+                                try {
+                                    java.lang.reflect.Field entityMapField = chunkMap.getClass().getDeclaredField("entityMap");
+                                    entityMapField.setAccessible(true);
+                                    @SuppressWarnings("unchecked")
+                                    java.util.Map<Integer, ?> entityMap = (java.util.Map<Integer, ?>) entityMapField.get(chunkMap);
+                                    
+                                    if (entityMap == null || !entityMap.containsKey(player.getId())) {
+                                        LOGGER.info("FloodgateSkinMixin: TrackedEntity not ready for Bedrock player {}, delaying skin application", playerName);
+                                        
+                                        // Schedule delayed skin application
+                                        var server = player.getServer();
+                                        if (server != null) {
+                                            java.util.concurrent.Executors.newSingleThreadScheduledExecutor().schedule(() -> {
+                                                try {
+                                                    // Re-check and apply skin safely
+                                                    applySkinSafely(player);
+                                                } catch (Exception e) {
+                                                    LOGGER.debug("FloodgateSkinMixin: Exception in delayed skin application: {}", e.getMessage());
+                                                }
+                                            }, 1000, java.util.concurrent.TimeUnit.MILLISECONDS);
+                                        }
+                                        
+                                        ci.cancel(); // Prevent immediate execution
+                                        return;
+                                    }
+                                } catch (Exception reflectionException) {
+                                    LOGGER.debug("FloodgateSkinMixin: Could not verify TrackedEntity, allowing skin application to proceed");
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception trackingException) {
+                    LOGGER.info("FloodgateSkinMixin: Tracking verification failed for {}, preventing skin application: {}", 
+                        playerName, trackingException.getMessage());
+                    ci.cancel();
+                    return;
+                }
+                
+                LOGGER.debug("FloodgateSkinMixin: TrackedEntity appears ready for Bedrock player: {}", playerName);
+            }
+        } catch (Exception e) {
+            LOGGER.debug("FloodgateSkinMixin: Exception in NPE prevention: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * Alternative method to intercept the applySkin method directly.
      */
     @Inject(
         method = "applySkin",
