@@ -38,7 +38,7 @@ public class SafeTaskExecutionMixin {
                 
                 if (task != null) {
                     String taskString = task.toString();
-                    LOGGER.debug("SafeTaskExecutionMixin: Executing task: {}", taskString);
+                    LOGGER.info("SafeTaskExecutionMixin: Executing task: {}", taskString);
                     
                     // Always execute ALL tasks with comprehensive NPE protection
                     // This is more aggressive but necessary to catch the TrackedEntity NPE
