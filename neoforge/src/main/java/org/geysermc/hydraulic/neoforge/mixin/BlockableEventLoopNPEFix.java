@@ -75,7 +75,34 @@ public class BlockableEventLoopNPEFix {
                     
                     if (isTrackedEntityNPE) {
                         LOGGER.info("BlockableEventLoopNPEFix: PREVENTED TrackedEntity NPE CRASH: {}", npeMessage);
-                        ci.cancel(); // Prevent the crash
+                        
+                        // Instead of completely canceling, try to complete the skin application safely
+                        // by scheduling a delayed retry when TrackedEntity might be ready
+                        if (stackTrace.contains("ModSkinApplier") || stackTrace.contains("floodgate")) {
+                            LOGGER.info("BlockableEventLoopNPEFix: Scheduling delayed skin application retry");
+                            
+                            // Try to extract the player from the task if possible
+                            try {
+                                // Get the task string to see if we can identify the player
+                                String taskStr = task.toString();
+                                if (taskStr.contains("ServerPlayer")) {
+                                    // Schedule a delayed skin application attempt
+                                    java.util.concurrent.Executors.newSingleThreadScheduledExecutor().schedule(() -> {
+                                        try {
+                                            LOGGER.debug("BlockableEventLoopNPEFix: Attempting delayed skin application");
+                                            // Try to run the task again after a delay when TrackedEntity might be ready
+                                            task.run();
+                                        } catch (Exception delayedException) {
+                                            LOGGER.debug("BlockableEventLoopNPEFix: Delayed skin application also failed: {}", delayedException.getMessage());
+                                        }
+                                    }, 2000, java.util.concurrent.TimeUnit.MILLISECONDS);
+                                }
+                            } catch (Exception scheduleException) {
+                                LOGGER.debug("BlockableEventLoopNPEFix: Could not schedule delayed retry: {}", scheduleException.getMessage());
+                            }
+                        }
+                        
+                        ci.cancel(); // Prevent the immediate crash
                         return;
                     } else {
                         // Re-throw non-TrackedEntity NPEs
