@@ -25,6 +25,7 @@
     "PacketErrorHandlerMixin",
     "NeoForgeVersionSpecificMixin",
     "BedrockSpawnSequenceMixin",
+    "FloodgateSkinMixin",
     "GeyserSpawnStateMixin",
     "GeyserSessionSyncMixin",
     "ChunkTrackingMixin",
