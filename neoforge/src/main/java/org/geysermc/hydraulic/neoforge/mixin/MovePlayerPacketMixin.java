@@ -25,54 +25,104 @@ public class MovePlayerPacketMixin {
     public ServerPlayer player;
 
     /**
-     * Only filter out obviously invalid packets that would cause crashes.
-     * Let normal validation work for most packets.
+     * Intercepts move player packet handling to provide more lenient validation for Bedrock players.
      */
     @Inject(
         method = "handleMovePlayer",
         at = @At("HEAD"),
         cancellable = true
     )
-    private void filterInvalidPackets(ServerboundMovePlayerPacket packet, CallbackInfo ci) {
+    private void handleBedrockMovePlayer(ServerboundMovePlayerPacket packet, CallbackInfo ci) {
         try {
             if (player != null) {
                 String playerName = player.getGameProfile().getName();
                 boolean isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);
                 
                 if (isBedrockPlayer) {
-                    // Only filter out packets with NaN/Infinite values that would cause crashes
+                    LOGGER.info("MovePlayerPacketMixin: Handling move player packet for Bedrock player: {} (Packet: {})", 
+                        playerName, packet.getClass().getSimpleName());
+                    
+                    // For Bedrock players, we need to be more lenient with movement validation
+                    // Check for obviously invalid values that would cause issues
+                    boolean hasValidPosition = true;
+                    boolean hasValidRotation = true;
+                    
+                    // Check if packet contains position data
                     try {
                         double x = packet.getX(player.getX());
                         double y = packet.getY(player.getY());
                         double z = packet.getZ(player.getZ());
+                        
+                        LOGGER.debug("MovePlayerPacketMixin: Position data for {}: x={}, y={}, z={} (current: {}, {}, {})", 
+                            playerName, x, y, z, player.getX(), player.getY(), player.getZ());
+                        
+                        // Check for NaN or infinite values
+                        if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z) ||
+                            Double.isInfinite(x) || Double.isInfinite(y) || Double.isInfinite(z)) {
+                            hasValidPosition = false;
+                            LOGGER.warn("MovePlayerPacketMixin: Invalid position values for Bedrock player {}: x={}, y={}, z={}", 
+                                playerName, x, y, z);
+                        }
+                        
+                        // Check for extremely large movement (possible teleport hack, but be more lenient for Bedrock)
+                        double deltaX = Math.abs(x - player.getX());
+                        double deltaY = Math.abs(y - player.getY());
+                        double deltaZ = Math.abs(z - player.getZ());
+                        double maxDelta = 100.0; // More lenient than Java Edition's usual ~10 block limit
+                        
+                        if (deltaX > maxDelta || deltaY > maxDelta || deltaZ > maxDelta) {
+                            LOGGER.warn("MovePlayerPacketMixin: Large movement detected for Bedrock player {}: dx={}, dy={}, dz={} - allowing due to Bedrock compatibility", 
+                                playerName, deltaX, deltaY, deltaZ);
+                            // Don't reject large movements for Bedrock players as Geyser might cause legitimate large movements
+                        }
+                    } catch (Exception e) {
+                        // If we can't get position data, assume it's not a position packet
+                        LOGGER.debug("MovePlayerPacketMixin: No position data in packet for {}: {}", playerName, e.getMessage());
+                    }
+                    
+                    // Check if packet contains rotation data
+                    try {
                         float yRot = packet.getYRot(player.getYRot());
                         float xRot = packet.getXRot(player.getXRot());
                         
-                        // Only cancel if values are NaN or infinite (which would crash the server)
-                        if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z) ||
-                            Double.isInfinite(x) || Double.isInfinite(y) || Double.isInfinite(z) ||
-                            Float.isNaN(yRot) || Float.isNaN(xRot) ||
+                        LOGGER.debug("MovePlayerPacketMixin: Rotation data for {}: yRot={}, xRot={} (current: {}, {})", 
+                            playerName, yRot, xRot, player.getYRot(), player.getXRot());
+                        
+                        // Check for NaN or infinite rotation values
+                        if (Float.isNaN(yRot) || Float.isNaN(xRot) ||
                             Float.isInfinite(yRot) || Float.isInfinite(xRot)) {
-                            
-                            LOGGER.debug("MovePlayerPacketMixin: Filtering invalid packet with NaN/Infinite values for Bedrock player: {}", playerName);
-                            ci.cancel(); // Only cancel truly invalid packets
-                            return;
+                            hasValidRotation = false;
+                            LOGGER.warn("MovePlayerPacketMixin: Invalid rotation values for Bedrock player {}: yRot={}, xRot={}", 
+                                playerName, yRot, xRot);
                         }
-                        
-                        // Let all other packets through normal processing
-                        LOGGER.debug("MovePlayerPacketMixin: Allowing move packet for Bedrock player: {}", playerName);
-                        
                     } catch (Exception e) {
-                        LOGGER.debug("MovePlayerPacketMixin: Exception checking packet validity: {}", e.getMessage());
-                        // Don't cancel on exceptions, let normal processing handle it
+                        // If we can't get rotation data, assume it's not a rotation packet
+                        LOGGER.debug("MovePlayerPacketMixin: No rotation data in packet for {}: {}", playerName, e.getMessage());
                     }
+                    
+                    // If the packet has invalid values, ignore it instead of disconnecting
+                    if (!hasValidPosition || !hasValidRotation) {
+                        LOGGER.info("MovePlayerPacketMixin: Ignoring invalid move packet for Bedrock player {} to prevent disconnect", 
+                            playerName);
+                        ci.cancel(); // Cancel processing this packet
+                        return;
+                    }
+                    
+                    // For valid packets from Bedrock players, let them through with debug logging
+                    LOGGER.info("MovePlayerPacketMixin: Processing valid move packet for Bedrock player {}", playerName);
                 }
             }
         } catch (Exception e) {
-            LOGGER.debug("MovePlayerPacketMixin: Exception in packet filtering: {}", e.getMessage());
+            LOGGER.error("MovePlayerPacketMixin: Exception in move player packet handling: {}", e.getMessage(), e);
+            // For Bedrock players, cancel on exceptions to prevent crashes
+            if (player != null && BedrockDetectionHelper.isFloodgatePlayer(player.getGameProfile().getName())) {
+                LOGGER.info("MovePlayerPacketMixin: Cancelling packet processing for Bedrock player due to exception");
+                ci.cancel();
+                return;
+            }
         }
         
-        // Continue with normal processing
+        // Continue with normal processing if we haven't cancelled
     }
     
     /**
