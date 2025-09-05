@@ -20,10 +20,12 @@
 
     "CustomPacketMixin",
     "GoodNightsSleepMixin",
+    "FloodgateSkinMixin",
     "IncompatibleClientMixin",
     "NetworkProtocolMixin",
     "PacketErrorHandlerMixin",
-    "NeoForgeVersionSpecificMixin"
+    "NeoForgeVersionSpecificMixin",
+    "BedrockSpawnSequenceMixin"
   ],
   "injectors": {
     "defaultRequire": 0
