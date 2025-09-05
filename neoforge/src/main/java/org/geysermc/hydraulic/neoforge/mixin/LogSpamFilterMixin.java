@@ -1,6 +1,5 @@
 package org.geysermc.hydraulic.neoforge.mixin;
 
-import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
