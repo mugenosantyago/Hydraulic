@@ -26,9 +26,13 @@ public class SafeTaskExecutionMixin {
         cancellable = true
     )
     private void safeTaskExecution(CallbackInfo ci) {
+        // CRITICAL: Add immediate logging to verify mixin is working
+        LOGGER.info("SafeTaskExecutionMixin: MIXIN TRIGGERED - Intercepting TickTask.run()");
+        
         try {
             // Get the task runnable
             TickTask self = (TickTask) (Object) this;
+            LOGGER.info("SafeTaskExecutionMixin: Got TickTask instance");
             
             // Use reflection to access the task field
             try {
