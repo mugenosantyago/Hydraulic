@@ -29,7 +29,8 @@
     "GeyserSessionSyncMixin",
     "ChunkTrackingMixin",
     "SafeTaskExecutionMixin",
-    "FloodgateSkinMixin"
+    "FloodgateSkinMixin",
+    "BedrockLoadingScreenFix"
   ],
   "injectors": {
     "defaultRequire": 0
