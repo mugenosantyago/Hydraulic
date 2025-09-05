@@ -88,15 +88,18 @@ public class GeyserSpawnPacketFix {
                         
                         // Try to access the downstream session (Bedrock client)
                         try {
+                            LOGGER.info("GeyserSpawnPacketFix: Attempting to access downstream session for: {}", playerName);
                             java.lang.reflect.Method getDownstreamSessionMethod = connection.getClass().getMethod("downstream");
                             Object downstreamSession = getDownstreamSessionMethod.invoke(connection);
                             
                             if (downstreamSession != null) {
+                                LOGGER.info("GeyserSpawnPacketFix: Successfully accessed downstream session for: {}", playerName);
                                 // Force the spawn packet to be sent
                                 forceSpawnPacketSending(downstreamSession, playerName);
                                 
                                 // Also try to access the upstream session (Java server)
                                 try {
+                                    LOGGER.info("GeyserSpawnPacketFix: Attempting to access upstream session for: {}", playerName);
                                     java.lang.reflect.Method getUpstreamSessionMethod = connection.getClass().getMethod("upstream");
                                     Object upstreamSession = getUpstreamSessionMethod.invoke(connection);
                                     
@@ -130,7 +133,9 @@ public class GeyserSpawnPacketFix {
      */
     private void forceSpawnPacketSending(Object downstreamSession, String playerName) {
         try {
+            LOGGER.info("GeyserSpawnPacketFix: Starting spawn packet forcing for: {}", playerName);
             Class<?> sessionClass = downstreamSession.getClass();
+            LOGGER.info("GeyserSpawnPacketFix: Session class for {}: {}", playerName, sessionClass.getName());
             
             // Try to find and call methods that force spawn packet sending
             java.lang.reflect.Method[] methods = sessionClass.getMethods();
