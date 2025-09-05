@@ -40,6 +40,8 @@
     "MovePlayerDebugMixin",
     "PacketInterceptorMixin",
     "TeleportPacketFixMixin",
+    "BedrockSafeSpawnMixin",
+    "BedrockDeathRespawnMixin",
     "EntityVariantNPEFix",
     "GeyserPacketTranslatorErrorFix"
   ],
