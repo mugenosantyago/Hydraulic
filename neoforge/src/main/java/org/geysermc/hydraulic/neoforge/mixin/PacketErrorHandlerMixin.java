@@ -48,15 +48,28 @@ public class PacketErrorHandlerMixin {
             if (isBedrockPlayer) {
                 // Check if the packet is null or the exception is related to custom packets that Bedrock clients can't handle
                 String errorMessage = exception != null ? exception.getMessage() : "null";
+                String packetType = packet != null ? packet.getClass().getSimpleName() : "null";
+                
+                // Handle move player packet errors specifically
+                if (packet != null && packetType.contains("MovePlayer")) {
+                    LOGGER.info("PacketErrorHandlerMixin: Preventing move player packet error for Bedrock player: {} (Error: {})", 
+                        playerName, errorMessage);
+                    ci.cancel(); // Don't let the packet error cause a disconnect
+                    return;
+                }
                 
                 if (packet == null || 
                     (errorMessage != null && (errorMessage.contains("may not be sent to the client") || 
                                             errorMessage.contains("UnsupportedOperationException") ||
                                             errorMessage.contains("Payload") ||
-                                            errorMessage.contains("null")))) {
+                                            errorMessage.contains("null") ||
+                                            errorMessage.toLowerCase().contains("invalid") ||
+                                            errorMessage.toLowerCase().contains("move") ||
+                                            errorMessage.toLowerCase().contains("player") ||
+                                            errorMessage.toLowerCase().contains("movement")))) {
                     
                     LOGGER.debug("PacketErrorHandlerMixin: Preventing packet error for Bedrock player: {} (Packet: {}, Error: {})", 
-                        playerName, packet != null ? packet.getClass().getSimpleName() : "null", errorMessage);
+                        playerName, packetType, errorMessage);
                     ci.cancel(); // Don't let the packet error cause a disconnect
                     return;
                 }

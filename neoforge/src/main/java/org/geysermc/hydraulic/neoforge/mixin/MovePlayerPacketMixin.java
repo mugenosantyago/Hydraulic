@@ -135,4 +135,49 @@ public class MovePlayerPacketMixin {
             LOGGER.debug("MovePlayerPacketMixin: Exception in disconnect prevention: {}", e.getMessage());
         }
     }
+    
+    /**
+     * Intercepts all disconnect calls in ServerGamePacketListenerImpl to prevent Bedrock players 
+     * from being disconnected due to move player validation issues.
+     */
+    @Inject(
+        method = "disconnect(Lnet/minecraft/network/chat/Component;)V",
+        at = @At("HEAD"),
+        cancellable = true
+    )
+    private void preventBedrockDisconnect(net.minecraft.network.chat.Component reason, CallbackInfo ci) {
+        try {
+            if (player != null) {
+                String playerName = player.getGameProfile().getName();
+                boolean isBedrockPlayer = BedrockDetectionHelper.isFloodgatePlayer(playerName);
+                
+                if (isBedrockPlayer) {
+                    String reasonText = reason != null ? reason.getString() : "unknown";
+                    
+                    // Check if this is a move player validation disconnect
+                    if (reasonText.toLowerCase().contains("invalid") && 
+                        (reasonText.toLowerCase().contains("move") || reasonText.toLowerCase().contains("player"))) {
+                        
+                        LOGGER.info("MovePlayerPacketMixin: Preventing move player validation disconnect for Bedrock player {}: {}", 
+                            playerName, reasonText);
+                        ci.cancel(); // Prevent the disconnect
+                        return;
+                    }
+                    
+                    // Also prevent disconnects for other movement-related validation issues
+                    if (reasonText.toLowerCase().contains("movement") || 
+                        reasonText.toLowerCase().contains("position") ||
+                        reasonText.toLowerCase().contains("teleport")) {
+                        
+                        LOGGER.info("MovePlayerPacketMixin: Preventing movement-related disconnect for Bedrock player {}: {}", 
+                            playerName, reasonText);
+                        ci.cancel(); // Prevent the disconnect
+                        return;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.debug("MovePlayerPacketMixin: Exception in disconnect prevention: {}", e.getMessage());
+        }
+    }
 }
