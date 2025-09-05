@@ -29,7 +29,6 @@
     "GeyserSessionSyncMixin",
     "ChunkTrackingMixin",
     "SafeTaskExecutionMixin",
-    "FloodgateSkinMixin",
     "BedrockLoadingScreenFix",
     "GeyserSpawnPacketFix"
   ],

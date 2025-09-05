@@ -38,9 +38,13 @@ public class SafeTaskExecutionMixin {
                 if (task != null) {
                     String taskString = task.toString();
                     
-                    // Check if this is a Floodgate skin application task
-                    if (taskString.contains("ModSkinApplier") || taskString.contains("floodgate")) {
-                        LOGGER.debug("SafeTaskExecutionMixin: Safely executing Floodgate task");
+                    // Check if this is a Floodgate skin application task or any task that might cause TrackedEntity issues
+                    if (taskString.contains("ModSkinApplier") || 
+                        taskString.contains("floodgate") || 
+                        taskString.contains("applySkin") ||
+                        taskString.contains("lambda$applySkin")) {
+                        
+                        LOGGER.debug("SafeTaskExecutionMixin: Safely executing potentially problematic Floodgate task");
                         
                         try {
                             // Execute the task with comprehensive NPE protection
@@ -52,7 +56,8 @@ public class SafeTaskExecutionMixin {
                             if (npeMessage != null && (npeMessage.contains("TrackedEntity") || 
                                                      npeMessage.contains("removePlayer") ||
                                                      npeMessage.contains("entry") ||
-                                                     npeMessage.contains("ChunkMap"))) {
+                                                     npeMessage.contains("ChunkMap") ||
+                                                     npeMessage.contains("because \"entry\" is null"))) {
                                 LOGGER.info("SafeTaskExecutionMixin: Prevented TrackedEntity/ChunkMap NPE in Floodgate skin application: {}", npeMessage);
                                 ci.cancel(); // Prevent the crash
                                 return;
@@ -65,6 +70,32 @@ public class SafeTaskExecutionMixin {
                             LOGGER.warn("SafeTaskExecutionMixin: Exception in Floodgate task execution: {}", e.getMessage());
                             ci.cancel(); // Prevent potential crashes
                             return;
+                        }
+                    }
+                    
+                    // Additional safety check for any task that might cause TrackedEntity issues
+                    // even if it's not obviously a Floodgate task
+                    if (taskString.contains("lambda")) {
+                        try {
+                            // Execute lambda tasks with NPE protection
+                            task.run();
+                            ci.cancel(); // We handled it, prevent double execution
+                            return;
+                        } catch (NullPointerException npe) {
+                            String npeMessage = npe.getMessage();
+                            if (npeMessage != null && (npeMessage.contains("TrackedEntity") || 
+                                                     npeMessage.contains("removePlayer") ||
+                                                     npeMessage.contains("entry") ||
+                                                     npeMessage.contains("ChunkMap"))) {
+                                LOGGER.info("SafeTaskExecutionMixin: Prevented TrackedEntity NPE in lambda task: {}", npeMessage);
+                                ci.cancel(); // Prevent the crash
+                                return;
+                            } else {
+                                // For lambda tasks, let other NPEs through but log them
+                                LOGGER.debug("SafeTaskExecutionMixin: NPE in lambda task (allowing): {}", npeMessage);
+                            }
+                        } catch (Exception e) {
+                            LOGGER.debug("SafeTaskExecutionMixin: Exception in lambda task: {}", e.getMessage());
                         }
                     }
                 }
