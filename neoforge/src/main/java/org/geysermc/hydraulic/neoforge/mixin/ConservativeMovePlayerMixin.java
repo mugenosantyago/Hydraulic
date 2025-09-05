@@ -43,25 +43,15 @@ public class ConservativeMovePlayerMixin {
                     String reasonText = reason != null ? reason.getString() : "";
                     String lowerReasonText = reasonText.toLowerCase();
                     
-                    // Log ALL disconnect attempts for Bedrock players for debugging
-                    LOGGER.info("ConservativeMovePlayerMixin: Disconnect attempt for Bedrock player {}: '{}'", playerName, reasonText);
-                    
-                    // Prevent disconnects that are specifically about invalid move player packets
+                    // ONLY prevent disconnects that are specifically about invalid move player packets
                     if ((lowerReasonText.contains("invalid") && 
                          (lowerReasonText.contains("move") || lowerReasonText.contains("player")) &&
                          lowerReasonText.contains("packet")) ||
                         lowerReasonText.contains("invalid move player packet received") ||
                         reasonText.contains("multiplayer.disconnect.invalid_player_movement")) {
                         
-                        LOGGER.info("ConservativeMovePlayerMixin: PREVENTED 'invalid move player packet' disconnect for Bedrock player: {} (reason: {})", playerName, reasonText);
+                        LOGGER.info("ConservativeMovePlayerMixin: Prevented 'invalid move player packet' disconnect for Bedrock player: {} (reason: {})", playerName, reasonText);
                         ci.cancel(); // Prevent ONLY this specific disconnect
-                        return;
-                    }
-                    
-                    // Also prevent generic "Disconnected" that might be hiding the real error
-                    if (lowerReasonText.equals("disconnected") || reasonText.trim().isEmpty()) {
-                        LOGGER.info("ConservativeMovePlayerMixin: PREVENTED generic disconnect for Bedrock player: {} (might be hiding move player error)", playerName);
-                        ci.cancel(); // Prevent generic disconnects that might be masking the real issue
                         return;
                     }
                 }
