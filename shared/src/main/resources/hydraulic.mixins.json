@@ -13,6 +13,10 @@
     "ext.LocationAwareSlf4JLoggerMixin",
     "ext.ModelSerializerMixin"
   ],
+  "client": [],
+  "server": [
+    "MovePlayerPacketMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

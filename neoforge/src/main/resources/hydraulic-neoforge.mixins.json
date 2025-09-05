@@ -32,7 +32,10 @@
     "BlockableEventLoopNPEFix",
     "BedrockPlayerTeleportFix",
     "BedrockLoadingScreenFix",
-    "GeyserSpawnPacketFix"
+    "GeyserSpawnPacketFix",
+    "MovePlayerPacketMixin",
+    "EntityVariantNPEFix",
+    "GeyserPacketTranslatorErrorFix"
   ],
   "injectors": {
     "defaultRequire": 0
