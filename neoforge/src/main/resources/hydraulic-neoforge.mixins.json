@@ -27,7 +27,8 @@
     "BedrockSpawnSequenceMixin",
     "GeyserSpawnStateMixin",
     "GeyserSessionSyncMixin",
-    "ChunkTrackingMixin"
+    "ChunkTrackingMixin",
+    "SafeTaskExecutionMixin"
   ],
   "injectors": {
     "defaultRequire": 0
