@@ -49,14 +49,31 @@ public class SafeTaskExecutionMixin {
                         return;
                     } catch (NullPointerException npe) {
                         String npeMessage = npe.getMessage();
-                        LOGGER.debug("SafeTaskExecutionMixin: Caught NPE: {}", npeMessage);
+                        String stackTrace = java.util.Arrays.toString(npe.getStackTrace());
                         
-                        if (npeMessage != null && (npeMessage.contains("TrackedEntity") || 
-                                                 npeMessage.contains("removePlayer") ||
-                                                 npeMessage.contains("entry") ||
-                                                 npeMessage.contains("ChunkMap") ||
-                                                 npeMessage.contains("because \"entry\" is null"))) {
-                            LOGGER.info("SafeTaskExecutionMixin: Prevented TrackedEntity/ChunkMap NPE: {}", npeMessage);
+                        LOGGER.info("SafeTaskExecutionMixin: Caught NPE - Message: {}", npeMessage);
+                        LOGGER.debug("SafeTaskExecutionMixin: NPE Stack trace contains: {}", stackTrace);
+                        
+                        // Check for TrackedEntity NPE with multiple detection methods
+                        boolean isTrackedEntityNPE = false;
+                        
+                        if (npeMessage != null) {
+                            isTrackedEntityNPE = npeMessage.contains("TrackedEntity") || 
+                                               npeMessage.contains("removePlayer") ||
+                                               npeMessage.contains("entry") ||
+                                               npeMessage.contains("ChunkMap") ||
+                                               npeMessage.contains("because \"entry\" is null");
+                        }
+                        
+                        // Also check stack trace for Floodgate ModSkinApplier
+                        if (!isTrackedEntityNPE && stackTrace != null) {
+                            isTrackedEntityNPE = stackTrace.contains("ModSkinApplier") ||
+                                               stackTrace.contains("floodgate") ||
+                                               stackTrace.contains("lambda$applySkin$0");
+                        }
+                        
+                        if (isTrackedEntityNPE) {
+                            LOGGER.info("SafeTaskExecutionMixin: Prevented TrackedEntity/Floodgate NPE: {}", npeMessage);
                             ci.cancel(); // Prevent the crash
                             return;
                         } else {
