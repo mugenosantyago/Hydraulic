@@ -167,7 +167,7 @@ public class FloodgateSkinMixin {
     /**
      * Safely applies skin with proper null checks.
      */
-    private void applySkinSafely(ServerPlayer player) {
+    private static void applySkinSafely(ServerPlayer player) {
         try {
             String playerName = player.getGameProfile().getName();
             
