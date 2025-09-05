@@ -116,19 +116,18 @@ public class GeyserSpawnPacketFix {
                                     LOGGER.warn("GeyserSpawnPacketFix: Downstream session is null for: {}", playerName);
                                 }
                             }
+                            
+                            // Also try to access the upstream session (Java server)
+                            try {
+                                LOGGER.info("GeyserSpawnPacketFix: Attempting to access upstream session for: {}", playerName);
+                                java.lang.reflect.Method getUpstreamSessionMethod = connection.getClass().getMethod("upstream");
+                                Object upstreamSession = getUpstreamSessionMethod.invoke(connection);
                                 
-                                // Also try to access the upstream session (Java server)
-                                try {
-                                    LOGGER.info("GeyserSpawnPacketFix: Attempting to access upstream session for: {}", playerName);
-                                    java.lang.reflect.Method getUpstreamSessionMethod = connection.getClass().getMethod("upstream");
-                                    Object upstreamSession = getUpstreamSessionMethod.invoke(connection);
-                                    
-                                    if (upstreamSession != null) {
-                                        synchronizeUpstreamSession(upstreamSession, playerName);
-                                    }
-                                } catch (Exception upstreamException) {
-                                    LOGGER.debug("GeyserSpawnPacketFix: Could not access upstream session: {}", upstreamException.getMessage());
+                                if (upstreamSession != null) {
+                                    synchronizeUpstreamSession(upstreamSession, playerName);
                                 }
+                            } catch (Exception upstreamException) {
+                                LOGGER.debug("GeyserSpawnPacketFix: Could not access upstream session: {}", upstreamException.getMessage());
                             }
                         } catch (Exception sessionException) {
                             LOGGER.debug("GeyserSpawnPacketFix: Could not access downstream session: {}", sessionException.getMessage());
