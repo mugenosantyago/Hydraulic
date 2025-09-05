@@ -43,18 +43,23 @@ public class SafeTaskExecutionMixin {
                         LOGGER.debug("SafeTaskExecutionMixin: Safely executing Floodgate task");
                         
                         try {
-                            // Execute the task with NPE protection
+                            // Execute the task with comprehensive NPE protection
                             task.run();
                             ci.cancel(); // We handled it, prevent double execution
                             return;
                         } catch (NullPointerException npe) {
-                            if (npe.getMessage() != null && npe.getMessage().contains("TrackedEntity")) {
-                                LOGGER.info("SafeTaskExecutionMixin: Prevented TrackedEntity NPE in Floodgate skin application");
+                            String npeMessage = npe.getMessage();
+                            if (npeMessage != null && (npeMessage.contains("TrackedEntity") || 
+                                                     npeMessage.contains("removePlayer") ||
+                                                     npeMessage.contains("entry") ||
+                                                     npeMessage.contains("ChunkMap"))) {
+                                LOGGER.info("SafeTaskExecutionMixin: Prevented TrackedEntity/ChunkMap NPE in Floodgate skin application: {}", npeMessage);
                                 ci.cancel(); // Prevent the crash
                                 return;
                             } else {
-                                // Re-throw other NPEs
-                                throw npe;
+                                LOGGER.warn("SafeTaskExecutionMixin: Unexpected NPE in Floodgate task: {}", npeMessage);
+                                ci.cancel(); // Prevent crash anyway for safety
+                                return;
                             }
                         } catch (Exception e) {
                             LOGGER.warn("SafeTaskExecutionMixin: Exception in Floodgate task execution: {}", e.getMessage());
