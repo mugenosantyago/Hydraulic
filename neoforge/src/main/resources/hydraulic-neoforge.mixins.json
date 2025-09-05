@@ -26,7 +26,8 @@
     "NeoForgeVersionSpecificMixin",
     "BedrockSpawnSequenceMixin",
     "GeyserSpawnStateMixin",
-    "GeyserSessionSyncMixin"
+    "GeyserSessionSyncMixin",
+    "ChunkTrackingMixin"
   ],
   "injectors": {
     "defaultRequire": 0
