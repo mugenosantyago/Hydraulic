@@ -49,7 +49,7 @@ public class LoadingScreenCompletionMixin {
                             player.setGameMode(player.gameMode.getGameModeForPlayer());
                             
                             // Force chunk updates around the player
-                            player.getLevel().getChunkSource().addRegionTicket(
+                            player.serverLevel().getChunkSource().addRegionTicket(
                                 net.minecraft.server.level.TicketType.PLAYER,
                                 new net.minecraft.world.level.ChunkPos(player.blockPosition()),
                                 3,
