@@ -30,7 +30,8 @@
     "ChunkTrackingMixin",
     "SafeTaskExecutionMixin",
     "FloodgateSkinMixin",
-    "BedrockLoadingScreenFix"
+    "BedrockLoadingScreenFix",
+    "GeyserSpawnPacketFix"
   ],
   "injectors": {
     "defaultRequire": 0
