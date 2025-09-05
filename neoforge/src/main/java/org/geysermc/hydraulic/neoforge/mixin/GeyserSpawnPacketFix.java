@@ -274,21 +274,53 @@ public class GeyserSpawnPacketFix {
                         if (downstreamSession != null) {
                             // Check if sentSpawn is still false
                             try {
+                                LOGGER.info("GeyserSpawnPacketFix: Attempting to check sentSpawn field for: {}", playerName);
                                 java.lang.reflect.Field sentSpawnField = downstreamSession.getClass().getDeclaredField("sentSpawn");
                                 sentSpawnField.setAccessible(true);
                                 boolean sentSpawn = sentSpawnField.getBoolean(downstreamSession);
                                 
+                                LOGGER.info("GeyserSpawnPacketFix: Current sentSpawn value for {}: {}", playerName, sentSpawn);
+                                
                                 if (!sentSpawn) {
                                     LOGGER.warn("GeyserSpawnPacketFix: sentSpawn still false for {}, forcing final fix", playerName);
                                     sentSpawnField.setBoolean(downstreamSession, true);
+                                    LOGGER.info("GeyserSpawnPacketFix: Successfully set sentSpawn to true for: {}", playerName);
                                     
                                     // Send additional packets to ensure client state
                                     sendFinalSpawnPackets(player);
                                 } else {
                                     LOGGER.info("GeyserSpawnPacketFix: Spawn state is now correct for: {}", playerName);
                                 }
+                            } catch (NoSuchFieldException nsfe) {
+                                LOGGER.warn("GeyserSpawnPacketFix: sentSpawn field not found for {}, trying alternative approaches", playerName);
+                                
+                                // Try to find any spawn-related fields
+                                try {
+                                    java.lang.reflect.Field[] fields = downstreamSession.getClass().getDeclaredFields();
+                                    LOGGER.info("GeyserSpawnPacketFix: Available fields in session for {}: {}", playerName, 
+                                        java.util.Arrays.stream(fields).map(f -> f.getName()).toArray());
+                                    
+                                    // Try alternative field names
+                                    String[] alternativeFields = {"spawned", "hasSpawned", "playerSpawned", "spawnSent"};
+                                    for (String fieldName : alternativeFields) {
+                                        try {
+                                            java.lang.reflect.Field field = downstreamSession.getClass().getDeclaredField(fieldName);
+                                            field.setAccessible(true);
+                                            if (field.getType() == boolean.class) {
+                                                boolean currentValue = field.getBoolean(downstreamSession);
+                                                LOGGER.info("GeyserSpawnPacketFix: Found field {} for {}, current value: {}", fieldName, playerName, currentValue);
+                                                field.setBoolean(downstreamSession, true);
+                                                LOGGER.info("GeyserSpawnPacketFix: Set {} to true for: {}", fieldName, playerName);
+                                            }
+                                        } catch (Exception altException) {
+                                            LOGGER.debug("GeyserSpawnPacketFix: Could not access field {}: {}", fieldName, altException.getMessage());
+                                        }
+                                    }
+                                } catch (Exception fieldsException) {
+                                    LOGGER.warn("GeyserSpawnPacketFix: Could not access fields for {}: {}", playerName, fieldsException.getMessage());
+                                }
                             } catch (Exception fieldException) {
-                                LOGGER.debug("GeyserSpawnPacketFix: Could not check sentSpawn field: {}", fieldException.getMessage());
+                                LOGGER.warn("GeyserSpawnPacketFix: Could not check sentSpawn field for {}: {}", playerName, fieldException.getMessage());
                             }
                         }
                     }
