@@ -43,6 +43,7 @@
     "BedrockSafeSpawnMixin",
     "BedrockDeathRespawnMixin",
     "BedrockGameplayTransitionMixin",
+    "KissModCompatibilityMixin",
     "EntityVariantNPEFix",
     "GeyserPacketTranslatorErrorFix"
   ],
