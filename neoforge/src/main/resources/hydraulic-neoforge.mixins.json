@@ -51,7 +51,9 @@
     "EntityVariantNPEFix",
     "GeyserPacketTranslatorErrorFix",
     "PlayerJoinDiagnosticMixin",
-    "DialogStackOverflowFixMixin"
+    "DialogStackOverflowFixMixin",
+    "GlobalStackOverflowPrevention",
+    "StringConcatHelperFixMixin"
   ],
   "injectors": {
     "defaultRequire": 0
