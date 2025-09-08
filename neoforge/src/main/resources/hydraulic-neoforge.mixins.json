@@ -50,7 +50,8 @@
     "AggressivePacketValidationBypassMixin",
     "EntityVariantNPEFix",
     "GeyserPacketTranslatorErrorFix",
-    "PlayerJoinDiagnosticMixin"
+    "PlayerJoinDiagnosticMixin",
+    "DialogStackOverflowFixMixin"
   ],
   "injectors": {
     "defaultRequire": 0
