@@ -49,7 +49,8 @@
     "KissModCompatibilityMixin",
     "AggressivePacketValidationBypassMixin",
     "EntityVariantNPEFix",
-    "GeyserPacketTranslatorErrorFix"
+    "GeyserPacketTranslatorErrorFix",
+    "PlayerJoinDiagnosticMixin"
   ],
   "injectors": {
     "defaultRequire": 0
