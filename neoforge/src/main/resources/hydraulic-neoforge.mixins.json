@@ -45,6 +45,7 @@
     "BedrockDeathRespawnMixin",
     "BedrockGameplayTransitionMixin",
     "BedrockLoadingScreenCompletionMixin",
+    "BedrockChunkLoadingMixin",
     "KissModCompatibilityMixin",
     "AggressivePacketValidationBypassMixin",
     "EntityVariantNPEFix",
