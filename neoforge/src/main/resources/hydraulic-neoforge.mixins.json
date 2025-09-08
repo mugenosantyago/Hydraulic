@@ -37,14 +37,11 @@
     "MovePlayerValidationMixin",
     "MovePlayerValidationBypassMixin",
     "ConservativeMovePlayerMixin",
-    "MovePlayerDebugMixin",
     "PacketInterceptorMixin",
     "TeleportPacketFixMixin",
     "TeleportValidationBypassMixin",
     "BedrockSafeSpawnMixin",
     "BedrockDeathRespawnMixin",
-    "BedrockGameplayTransitionMixin",
-    "BedrockLoadingScreenCompletionMixin",
     "BedrockChunkLoadingMixin",
     "KissModCompatibilityMixin",
     "AggressivePacketValidationBypassMixin",
@@ -52,8 +49,7 @@
     "GeyserPacketTranslatorErrorFix",
     "PlayerJoinDiagnosticMixin",
     "DialogStackOverflowFixMixin",
-    "GlobalStackOverflowPrevention",
-    "StringConcatHelperFixMixin"
+    "GlobalStackOverflowPrevention"
   ],
   "injectors": {
     "defaultRequire": 0
