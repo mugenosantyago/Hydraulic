@@ -37,80 +37,95 @@ public class SafeTaskExecutionMixin {
                 Runnable task = (Runnable) taskField.get(self);
                 
                 if (task != null) {
-                    String taskString = task.toString();
+                    // SAFETY: Only call toString() if we suspect this might be a Floodgate task
+                    // to avoid stack overflow from dialog circular references on Java players
+                    String taskString = null;
+                    boolean isFloodgateTask = false;
                     
-                    // Check if this is a Floodgate-related task - ONLY log these
-                    boolean isFloodgateTask = taskString.contains("ModSkinApplier") || 
+                    try {
+                        // Safe check for Floodgate-related tasks using class name first
+                        String taskClassName = task.getClass().getName();
+                        if (taskClassName.contains("ModSkinApplier") || 
+                            taskClassName.contains("floodgate") || 
+                            taskClassName.contains("applySkin")) {
+                            // Only call toString() if we're confident this is a Floodgate task
+                            taskString = task.toString();
+                            isFloodgateTask = taskString.contains("ModSkinApplier") || 
                                             taskString.contains("floodgate") || 
                                             taskString.contains("applySkin") ||
                                             taskString.contains("lambda$applySkin");
+                        }
+                    } catch (Exception toStringException) {
+                        // If toString() fails (like with circular references), treat as non-Floodgate task
+                        LOGGER.debug("SafeTaskExecutionMixin: toString() failed for task, skipping protection: {}", toStringException.getMessage());
+                        return; // Let the task run normally
+                    }
                     
-                    if (isFloodgateTask) {
+                    if (isFloodgateTask && taskString != null) {
                         LOGGER.warn("SafeTaskExecutionMixin: DETECTED FLOODGATE TASK - Will execute with protection: {}", taskString);
                     }
                     
-                    // ULTRA AGGRESSIVE: Execute ALL tasks with full exception protection
-                    // If ANY NPE occurs that could be related to Floodgate/TrackedEntity, we'll catch it
-                    try {
-                        // Execute the task with maximum protection
-                        task.run();
-                        ci.cancel(); // We handled it, prevent double execution
-                        return;
+                    // Only apply NPE protection to Floodgate tasks to avoid interfering with Java players
+                    if (isFloodgateTask) {
+                        try {
+                            // Execute the task with maximum protection for Floodgate tasks
+                            task.run();
+                            ci.cancel(); // We handled it, prevent double execution
+                            return;
                     } catch (NullPointerException npe) {
                         String npeMessage = npe.getMessage();
                         String stackTrace = npe.getStackTrace() != null ? java.util.Arrays.toString(npe.getStackTrace()) : "null";
                         
-                        LOGGER.info("SafeTaskExecutionMixin: Caught NPE - Message: {}, Task: {}", npeMessage, taskString);
-                        LOGGER.info("SafeTaskExecutionMixin: NPE Stack trace: {}", stackTrace);
-                        
-                        // ULTRA AGGRESSIVE: Catch ALL NPEs that might be related to Floodgate or TrackedEntity
-                        boolean shouldPreventNPE = false;
-                        
-                        // Check message for TrackedEntity-related content
-                        if (npeMessage != null) {
-                            shouldPreventNPE = npeMessage.contains("TrackedEntity") || 
-                                             npeMessage.contains("removePlayer") ||
-                                             npeMessage.contains("entry") ||
-                                             npeMessage.contains("ChunkMap") ||
-                                             npeMessage.contains("because \"entry\" is null") ||
-                                             npeMessage.contains("ModSkinApplier");
+                            LOGGER.info("SafeTaskExecutionMixin: Caught NPE - Message: {}, Task: {}", npeMessage, taskString != null ? taskString : "unknown");
+                            LOGGER.info("SafeTaskExecutionMixin: NPE Stack trace: {}", stackTrace);
+                            
+                            // For Floodgate tasks, check if this is a TrackedEntity NPE
+                            boolean shouldPreventNPE = false;
+                            
+                            // Check message for TrackedEntity-related content
+                            if (npeMessage != null) {
+                                shouldPreventNPE = npeMessage.contains("TrackedEntity") || 
+                                                 npeMessage.contains("removePlayer") ||
+                                                 npeMessage.contains("entry") ||
+                                                 npeMessage.contains("ChunkMap") ||
+                                                 npeMessage.contains("because \"entry\" is null") ||
+                                                 npeMessage.contains("ModSkinApplier");
+                            }
+                            
+                            // Check stack trace for Floodgate-related content
+                            if (!shouldPreventNPE && stackTrace != null) {
+                                shouldPreventNPE = stackTrace.contains("ModSkinApplier") ||
+                                                 stackTrace.contains("floodgate") ||
+                                                 stackTrace.contains("lambda$applySkin") ||
+                                                 stackTrace.contains("TrackedEntity") ||
+                                                 stackTrace.contains("removePlayer");
+                            }
+                            
+                            // Check task string for Floodgate-related content
+                            if (!shouldPreventNPE && taskString != null) {
+                                shouldPreventNPE = taskString.contains("ModSkinApplier") ||
+                                                 taskString.contains("floodgate") ||
+                                                 taskString.contains("applySkin");
+                            }
+                            
+                            if (shouldPreventNPE) {
+                                LOGGER.info("SafeTaskExecutionMixin: PREVENTED NPE CRASH: {}", npeMessage);
+                                ci.cancel(); // Prevent the crash
+                                return;
+                            } else {
+                                // For clearly unrelated NPEs, re-throw them
+                                LOGGER.debug("SafeTaskExecutionMixin: Re-throwing unrelated NPE: {}", npeMessage);
+                                throw npe;
+                            }
+                        } catch (Exception e) {
+                            // For non-NPE exceptions, log and re-throw
+                            LOGGER.debug("SafeTaskExecutionMixin: Non-NPE exception in task execution: {} - {}", e.getClass().getSimpleName(), e.getMessage());
+                            throw e;
                         }
-                        
-                        // Check stack trace for Floodgate-related content
-                        if (!shouldPreventNPE && stackTrace != null) {
-                            shouldPreventNPE = stackTrace.contains("ModSkinApplier") ||
-                                             stackTrace.contains("floodgate") ||
-                                             stackTrace.contains("lambda$applySkin") ||
-                                             stackTrace.contains("TrackedEntity") ||
-                                             stackTrace.contains("removePlayer");
-                        }
-                        
-                        // Check task string for Floodgate-related content
-                        if (!shouldPreventNPE && taskString != null) {
-                            shouldPreventNPE = taskString.contains("ModSkinApplier") ||
-                                             taskString.contains("floodgate") ||
-                                             taskString.contains("applySkin");
-                        }
-                        
-                        // NUCLEAR OPTION: If this is any lambda task, prevent ALL NPEs as a safety measure
-                        if (!shouldPreventNPE && taskString != null && taskString.contains("lambda")) {
-                            LOGGER.warn("SafeTaskExecutionMixin: NUCLEAR OPTION - Preventing lambda NPE as safety measure: {}", npeMessage);
-                            shouldPreventNPE = true;
-                        }
-                        
-                        if (shouldPreventNPE) {
-                            LOGGER.info("SafeTaskExecutionMixin: PREVENTED NPE CRASH: {}", npeMessage);
-                            ci.cancel(); // Prevent the crash
-                            return;
-                        } else {
-                            // For clearly unrelated NPEs, re-throw them
-                            LOGGER.debug("SafeTaskExecutionMixin: Re-throwing unrelated NPE: {}", npeMessage);
-                            throw npe;
-                        }
-                    } catch (Exception e) {
-                        // For non-NPE exceptions, log and re-throw
-                        LOGGER.debug("SafeTaskExecutionMixin: Non-NPE exception in task execution: {} - {}", e.getClass().getSimpleName(), e.getMessage());
-                        throw e;
+                    } else {
+                        // For non-Floodgate tasks, let them run normally without any protection
+                        // This prevents us from interfering with Java player tasks
+                        return;
                     }
                 }
             } catch (Exception reflectionException) {
