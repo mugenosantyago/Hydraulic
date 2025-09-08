@@ -54,11 +54,11 @@ public class BedrockChunkLoadingMixin {
                 LOGGER.info("BedrockChunkLoadingMixin: Forcing chunk loading for Bedrock player: {}", playerName);
                 chunkLoadingSent.add(playerName);
                 
-                // Schedule chunk loading with multiple attempts
+                // Schedule chunk loading with conservative approach
                 server.execute(() -> {
                     try {
-                        // Multiple attempts with increasing delays
-                        for (int attempt = 1; attempt <= 4; attempt++) {
+                        // Fewer attempts with longer delays to prevent server overload
+                        for (int attempt = 1; attempt <= 2; attempt++) {
                             final int currentAttempt = attempt;
                             
                             java.util.concurrent.Executors.newSingleThreadScheduledExecutor().schedule(() -> {
@@ -68,7 +68,7 @@ public class BedrockChunkLoadingMixin {
                                     LOGGER.error("BedrockChunkLoadingMixin: Exception in chunk loading attempt {} for {}: {}", 
                                         currentAttempt, playerName, e.getMessage());
                                 }
-                            }, attempt * 300L, java.util.concurrent.TimeUnit.MILLISECONDS);
+                            }, attempt * 1000L, java.util.concurrent.TimeUnit.MILLISECONDS); // Increased delay
                         }
                     } catch (Exception e) {
                         LOGGER.error("BedrockChunkLoadingMixin: Exception scheduling chunk loading for {}: {}", 
@@ -151,61 +151,52 @@ public class BedrockChunkLoadingMixin {
     }
     
     /**
-     * Forces loading of chunks around the player.
+     * Forces loading of chunks around the player using server's existing chunk system.
      */
     private void forceLoadSurroundingChunks(ServerPlayer player, int attempt) {
         try {
             if (player.connection == null) return;
             
             String playerName = player.getGameProfile().getName();
-            ServerLevel level = (ServerLevel) player.level();
             
             LOGGER.debug("BedrockChunkLoadingMixin: Force loading chunks for {} (attempt {})", playerName, attempt);
             
-            BlockPos playerPos = player.blockPosition();
-            ChunkPos centerChunk = new ChunkPos(playerPos);
-            
-            // Load chunks in a smaller radius for Bedrock compatibility
-            int loadRadius = 2; // 5x5 chunk area around player
-            int chunksLoaded = 0;
-            
-            for (int x = -loadRadius; x <= loadRadius; x++) {
-                for (int z = -loadRadius; z <= loadRadius; z++) {
-                    ChunkPos chunkPos = new ChunkPos(centerChunk.x + x, centerChunk.z + z);
+            // Use the server's built-in chunk sending mechanism instead of manual chunk loading
+            // This avoids thread contention issues
+            try {
+                // Get the player's chunk sender
+                net.minecraft.server.network.PlayerChunkSender chunkSender = player.connection.chunkSender;
+                
+                if (chunkSender != null) {
+                    // Force the chunk sender to send pending chunks
+                    java.lang.reflect.Method sendNextChunksMethod = 
+                        net.minecraft.server.network.PlayerChunkSender.class.getDeclaredMethod("sendNextChunks", ServerPlayer.class);
+                    sendNextChunksMethod.setAccessible(true);
+                    sendNextChunksMethod.invoke(chunkSender, player);
                     
-                    try {
-                        // Get or load the chunk
-                        LevelChunk chunk = level.getChunk(chunkPos.x, chunkPos.z);
-                        
-                        if (chunk != null) {
-                            // Send chunk data to client
-                            try {
-                                ClientboundLevelChunkWithLightPacket chunkPacket = 
-                                    new ClientboundLevelChunkWithLightPacket(chunk, level.getLightEngine(), null, null);
-                                player.connection.send(chunkPacket);
-                                chunksLoaded++;
-                                
-                                // Add small delay between chunks to prevent overwhelming
-                                if (chunksLoaded % 3 == 0) {
-                                    Thread.sleep(10);
-                                }
-                            } catch (Exception chunkPacketException) {
-                                LOGGER.debug("BedrockChunkLoadingMixin: Could not send chunk packet for {} at {},{}: {}", 
-                                    playerName, chunkPos.x, chunkPos.z, chunkPacketException.getMessage());
-                            }
-                        }
-                    } catch (Exception chunkException) {
-                        LOGGER.debug("BedrockChunkLoadingMixin: Could not load chunk for {} at {},{}: {}", 
-                            playerName, chunkPos.x, chunkPos.z, chunkException.getMessage());
-                    }
+                    LOGGER.debug("BedrockChunkLoadingMixin: Triggered chunk sender for {} (attempt {})", playerName, attempt);
+                } else {
+                    LOGGER.debug("BedrockChunkLoadingMixin: No chunk sender available for {} (attempt {})", playerName, attempt);
+                }
+            } catch (Exception chunkSenderException) {
+                LOGGER.debug("BedrockChunkLoadingMixin: Could not use chunk sender for {}: {}", 
+                    playerName, chunkSenderException.getMessage());
+                
+                // Fallback: Just trigger a simple position update to encourage chunk loading
+                try {
+                    player.connection.teleport(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
+                    LOGGER.debug("BedrockChunkLoadingMixin: Used position update fallback for {}", playerName);
+                } catch (Exception positionException) {
+                    LOGGER.debug("BedrockChunkLoadingMixin: Position update fallback failed for {}: {}", 
+                        playerName, positionException.getMessage());
                 }
             }
             
-            // Force delivery of all chunk packets
+            // Force delivery
             player.connection.getConnection().flushChannel();
             
-            LOGGER.info("BedrockChunkLoadingMixin: Loaded {} chunks for {} (attempt {})", 
-                chunksLoaded, playerName, attempt);
+            LOGGER.debug("BedrockChunkLoadingMixin: Completed chunk loading attempt {} for: {}", 
+                attempt, playerName);
             
         } catch (Exception e) {
             LOGGER.error("BedrockChunkLoadingMixin: Failed to force load chunks for {}: {}", 
