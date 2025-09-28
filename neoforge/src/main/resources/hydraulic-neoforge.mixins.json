@@ -49,7 +49,9 @@
     "GeyserPacketTranslatorErrorFix",
     "PlayerJoinDiagnosticMixin",
     "DialogStackOverflowFixMixin",
-    "GlobalStackOverflowPrevention"
+    "GlobalStackOverflowPrevention",
+    "DelayedBedrockFixMixin",
+    "BedrockSpawnStateTrackerMixin"
   ],
   "injectors": {
     "defaultRequire": 0

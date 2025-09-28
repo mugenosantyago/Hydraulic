@@ -1,0 +1,32 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "org.geysermc.hydraulic.neoforge.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "DiagnosticMixin",
+    "ConfigSyncMixin",
+    "NeoForgeRegistryMixin",
+    "NeoForgeHandshakeMixin",
+    "NetworkRegistrationMixin",
+    
+    "NeoForgeConnectionMixin",
+    "GlobalDisconnectMixin",
+    "ServerCommonPacketListenerMixin",
+    "IncompatibleClientMixin",
+    
+    "MovePlayerPacketMixin",
+    "GoodNightsSleepMixin",
+    
+    "SafeTaskExecutionMixin",
+    "BlockableEventLoopNPEFix",
+    "GlobalStackOverflowPrevention",
+    "DialogStackOverflowFixMixin",
+    
+    "PlayerJoinDiagnosticMixin",
+    "DelayedBedrockFixMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}
