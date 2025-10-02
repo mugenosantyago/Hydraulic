@@ -2,7 +2,7 @@
 mixin = "0.8.5"
 mixinextras = "0.3.5"
 #geyser = "2.8.3-SNAPSHOT"
-geyser = "custom-item-api-v2-65b5d98327-1"
+geyser = "custom-item-api-v2-SNAPSHOT"
 auto-service = "1.0.1"
 pack-converter = "3.4.1-SNAPSHOT"
 indra = "3.1.3"
