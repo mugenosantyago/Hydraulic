@@ -49,16 +49,8 @@ public class DelayedBedrockFixMixin {
                                 player.teleportTo(spawn.getX() + 0.5, spawn.getY() + 1, spawn.getZ() + 0.5);
                             }
                             
-                            // Gentle chunk loading (no excessive forcing)
-                            try {
-                                var chunkSource = player.level().getChunkSource();
-                                var playerChunk = player.chunkPosition();
-                                chunkSource.addRegionTicket(net.minecraft.server.level.TicketType.PLAYER, 
-                                    playerChunk, 3, player.getUUID());
-                                LOGGER.debug("DelayedBedrockFixMixin: Added gentle chunk ticket for: {}", playerName);
-                            } catch (Exception e) {
-                                LOGGER.debug("DelayedBedrockFixMixin: Gentle chunk loading failed for {}: {}", playerName, e.getMessage());
-                            }
+                            // Chunk loading - skip explicit ticket as server handles this automatically
+                            LOGGER.debug("DelayedBedrockFixMixin: Relying on automatic chunk loading for: {}", playerName);
                             
                             LOGGER.info("DelayedBedrockFixMixin: Completed gentle post-spawn fix for: {}", playerName);
                         }
